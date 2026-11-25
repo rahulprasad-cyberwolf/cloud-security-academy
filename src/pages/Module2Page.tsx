@@ -1,215 +1,246 @@
-import { AlertTriangle, Shield, UserCheck, UserX } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { useState } from 'react';
 import { ConceptCard } from '../components/ConceptCard';
 import { QuickCheck } from '../components/QuickCheck';
 import { useCourse } from '../context/CourseContext';
 
-interface AccessRow {
+interface AccessUser {
   id: string;
-  user: string;
+  name: string;
   role: string;
+  status: 'Active' | 'Former Employee' | 'Developer';
   permission: string;
-  status: 'Required' | 'Review';
-  unnecessary: boolean;
-  resource: string;
-  explanation: string;
+  lastActive: string;
+  shouldInvestigate: boolean;
+  priority: 'High' | 'Medium' | 'Low';
+  reason: string;
+  actionRequired: string;
 }
 
-const ACCESS_ROWS: AccessRow[] = [
+const DASHBOARD_USERS: AccessUser[] = [
   {
-    id: 'u1',
-    user: 'Rahul',
-    role: 'Developer',
-    permission: 'Read + Write',
-    status: 'Required',
-    unnecessary: false,
-    resource: 'Dev App',
-    explanation: 'Rahul is an active Developer who needs Read + Write on Dev App.',
+    id: 'user_a',
+    name: 'User A (Priya)',
+    role: 'Active Developer',
+    status: 'Active',
+    permission: 'Developer (Read/Write Dev Code)',
+    lastActive: 'Today at 10:15 AM',
+    shouldInvestigate: false,
+    priority: 'Low',
+    reason: 'Normal: Active employee with appropriate developer permissions.',
+    actionRequired: 'No action needed. Keep current access.',
   },
   {
-    id: 'u2',
-    user: 'Arun',
-    role: 'Tester',
-    permission: 'Read',
-    status: 'Required',
-    unnecessary: false,
-    resource: 'Test Reports',
-    explanation: 'Arun is an active Tester who only needs Read access.',
+    id: 'user_b',
+    name: 'User B (Arun)',
+    role: 'Former Employee',
+    status: 'Former Employee',
+    permission: 'Master Admin Access',
+    lastActive: 'Left company 3 months ago; Login yesterday at 11:45 PM',
+    shouldInvestigate: true,
+    priority: 'High',
+    reason: 'CRITICAL! Left the company 3 months ago but still holds full Admin rights and shows recent activity!',
+    actionRequired: 'Immediately revoke credentials and investigate all activity logs.',
   },
   {
-    id: 'u3',
-    user: 'OldUser',
-    role: 'Admin',
-    permission: 'Full Access',
-    status: 'Review',
-    unnecessary: true,
-    resource: 'All Cloud Resources',
-    explanation: 'Unnecessary Admin access! OldUser should be reviewed and removed.',
-  },
-  {
-    id: 'u4',
-    user: 'GuestUser',
-    role: 'Admin',
-    permission: 'Full Access',
-    status: 'Review',
-    unnecessary: true,
-    resource: 'All Cloud Resources',
-    explanation: 'Dangerous! A GuestUser should NEVER have Admin Full Access.',
+    id: 'user_c',
+    name: 'User C (Deepak)',
+    role: 'Junior Frontend Dev',
+    status: 'Developer',
+    permission: 'Full Cloud Admin + Production DB Write',
+    lastActive: 'Active today',
+    shouldInvestigate: true,
+    priority: 'High',
+    reason: 'VIOLATION! A junior frontend developer has Full Admin and Production DB Write privileges.',
+    actionRequired: 'Downgrade to Developer role and strip Production Admin rights.',
   },
 ];
 
 export function Module2Page() {
-  const { progress, recordChallengeSuccess } = useCourse();
-  const [flagged, setFlagged] = useState<Record<string, boolean>>({});
-  const [feedback, setFeedback] = useState<AccessRow | null>(null);
-  const isTeacher = progress.mode === 'teacher';
+  const { recordChallengeSuccess } = useCourse();
+  const [selectedUser, setSelectedUser] = useState<AccessUser>(DASHBOARD_USERS[1]);
+  const [reviewedUsers, setReviewedUsers] = useState<Record<string, boolean>>({});
+  const [firstInvestigateChoice, setFirstInvestigateChoice] = useState<string | null>(null);
 
-  const targets = ACCESS_ROWS.filter((r) => r.unnecessary);
-  const foundCount = targets.filter((t) => flagged[t.id]).length;
-
-  const handleToggleFlag = (row: AccessRow) => {
-    setFeedback(row);
-    const next = { ...flagged, [row.id]: !flagged[row.id] };
-    setFlagged(next);
-    if (next['u3'] && next['u4'] && !next['u1'] && !next['u2']) {
-      recordChallengeSuccess('m2-access-review', 20, 'lab-access-review');
+  const handleSelectFirstInvestigate = (userId: string) => {
+    setFirstInvestigateChoice(userId);
+    if (userId === 'user_b') {
+      recordChallengeSuccess('access-review-first-choice', 25, 'lab-access-review');
     }
+  };
+
+  const handleAction = (userId: string) => {
+    setReviewedUsers((prev) => ({ ...prev, [userId]: true }));
   };
 
   return (
     <div className="space-y-6">
       <header className="glass-card rounded-2xl p-6">
         <h1 id="main-content" tabIndex={-1} className="text-2xl font-bold text-white sm:text-3xl">
-          Access Review
+          Cloud Access Review
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-300 sm:text-base">
-          An <strong className="text-cyan-300">Access Review</strong> checks who has access to
-          cloud resources—especially spotting who should NOT have Admin access.
+          Over time, permissions accumulate. Employees switch teams, contractors leave, and unused admin accounts linger.
+          <br />
+          An <strong className="text-cyan-300">Access Review</strong> is a scheduled audit to answer: <em>"Does this person still need this access today?"</em>
         </p>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-4">
+          <div className="rounded-xl border border-cyan-400/30 bg-slate-900/60 p-3">
+            <p className="text-xs font-bold text-cyan-300">RULE 1</p>
+            <p className="mt-1 text-xs text-slate-200">Remove access immediately when employees leave.</p>
+          </div>
+          <div className="rounded-xl border border-amber-400/30 bg-slate-900/60 p-3">
+            <p className="text-xs font-bold text-amber-300">RULE 2</p>
+            <p className="mt-1 text-xs text-slate-200">Adjust roles when someone switches teams or projects.</p>
+          </div>
+          <div className="rounded-xl border border-rose-400/30 bg-slate-900/60 p-3">
+            <p className="text-xs font-bold text-rose-300">RULE 3</p>
+            <p className="mt-1 text-xs text-slate-200">Strip excessive Admin rights from developers & guests.</p>
+          </div>
+          <div className="rounded-xl border border-emerald-400/30 bg-emerald-950/20 p-3">
+            <p className="text-xs font-bold text-emerald-300">RULE 4</p>
+            <p className="mt-1 text-xs text-slate-200">Run periodic audits (e.g. monthly or quarterly).</p>
+          </div>
+        </div>
       </header>
 
-      {/* SVG showing users connected to different cloud resources */}
+      {/* Access Review Dashboard */}
       <section className="glass-card rounded-2xl p-6">
-        <h2 className="mb-3 text-lg font-bold text-white">
-          Users Connected to Cloud Resources
-        </h2>
-        <div className="rounded-2xl border border-slate-800 bg-slate-950/85 p-4">
-          <svg
-            role="img"
-            aria-label="Diagram showing Rahul connected to Dev App, Arun connected to Test Reports, and OldUser and GuestUser connected to All Cloud Resources"
-            viewBox="0 0 720 180"
-            className="h-auto w-full"
-          >
-            {ACCESS_ROWS.map((r, idx) => {
-              const y = 16 + idx * 40;
-              const stroke = r.unnecessary ? '#fb7185' : '#34d399';
-              return (
-                <g key={r.id}>
-                  <rect x="20" y={y} width="160" height="30" rx="8" fill="#0f172a" stroke={stroke} strokeWidth="1.8" />
-                  <text x="100" y={y + 19} textAnchor="middle" fill="#fff" fontSize="11" fontWeight="700">
-                    {r.user} ({r.role})
-                  </text>
-                  <line x1="180" y1={y + 15} x2="460" y2={y + 15} stroke={stroke} strokeWidth="2" className="animate-flow" />
-                  <rect x="460" y={y} width="230" height="30" rx="8" fill="#0f172a" stroke={stroke} strokeWidth="1.8" />
-                  <text x="575" y={y + 19} textAnchor="middle" fill={r.unnecessary ? '#fda4af' : '#6ee7b7'} fontSize="11" fontWeight="700">
-                    {r.resource} ({r.permission})
-                  </text>
-                </g>
-              );
-            })}
-          </svg>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div>
+            <h2 className="text-lg font-bold text-white">Live Access Review Dashboard</h2>
+            <p className="text-xs text-slate-400">Review the three accounts below. Click on any account to inspect details.</p>
+          </div>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-3">
+          {DASHBOARD_USERS.map((user) => {
+            const isSelected = selectedUser.id === user.id;
+            const isResolved = reviewedUsers[user.id];
+            return (
+              <button
+                key={user.id}
+                type="button"
+                onClick={() => setSelectedUser(user)}
+                className={`rounded-2xl border p-4 text-left transition-all ${
+                  isSelected
+                    ? 'border-cyan-400 bg-cyan-950/40 ring-1 ring-cyan-400'
+                    : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-white">{user.name}</span>
+                  <span
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      user.priority === 'High' ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'
+                    }`}
+                  >
+                    {user.status}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs font-semibold text-cyan-200">{user.permission}</p>
+                <p className="mt-1 text-[11px] text-slate-400">Last active: {user.lastActive}</p>
+                {isResolved && (
+                  <p className="mt-2 text-[11px] font-bold text-emerald-400 flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" /> Remediated
+                  </p>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Selected User Detail Card */}
+        <div className="mt-4 rounded-2xl border border-slate-700 bg-slate-950/90 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-bold text-white">{selectedUser.name} — Full Details</h3>
+              <p className="text-xs text-cyan-300">{selectedUser.role} • Permission: {selectedUser.permission}</p>
+            </div>
+            {selectedUser.shouldInvestigate && (
+              <button
+                type="button"
+                onClick={() => handleAction(selectedUser.id)}
+                className="rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs px-4 py-2 transition-all"
+              >
+                {reviewedUsers[selectedUser.id] ? 'Access Revoked ✓' : 'Revoke & Fix Access Now'}
+              </button>
+            )}
+          </div>
+
+          <div className="mt-3 rounded-xl bg-slate-900/80 p-3 text-xs space-y-1">
+            <p className="text-slate-200"><strong>Assessment:</strong> {selectedUser.reason}</p>
+            <p className="text-amber-300"><strong>Action Required:</strong> {selectedUser.actionRequired}</p>
+          </div>
         </div>
       </section>
 
-      {/* Fictional Access-Control Dashboard */}
+      {/* Interactive Question: Which account should be investigated first? */}
       <section className="glass-card rounded-2xl p-6">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h2 className="text-lg font-bold text-white">
-              Access Review Activity: Identify Who Needs Review
-            </h2>
-            <p className="text-sm text-slate-400">
-              Click <strong>“Flag for Review”</strong> on the 2 accounts that should NOT have Admin
-              access.
-            </p>
-          </div>
-          <span className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-200">
-            Found: {foundCount} / {targets.length}
-          </span>
+        <h2 className="text-lg font-bold text-white mb-2">Classroom Decision: Which Account Should Be Investigated First?</h2>
+        <p className="text-xs text-slate-400 mb-4">Select the account posing the highest and most immediate security danger.</p>
+
+        <div className="space-y-2">
+          {DASHBOARD_USERS.map((user) => {
+            const isPicked = firstInvestigateChoice === user.id;
+            return (
+              <button
+                key={user.id}
+                type="button"
+                onClick={() => handleSelectFirstInvestigate(user.id)}
+                className={`w-full rounded-xl border p-4 text-left transition-all ${
+                  isPicked
+                    ? user.id === 'user_b'
+                      ? 'border-emerald-500 bg-emerald-950/30 text-emerald-200'
+                      : 'border-rose-500 bg-rose-950/30 text-rose-200'
+                    : 'border-slate-800 bg-slate-900/60 hover:border-cyan-400'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold text-white">{user.name} ({user.status})</p>
+                  <span className="text-[11px] text-slate-400">{user.permission}</span>
+                </div>
+                <p className="mt-1 text-xs text-slate-300">{user.reason}</p>
+              </button>
+            );
+          })}
         </div>
 
-        <div tabIndex={0} role="region" aria-labelledby="access-review-caption" className="table-wrapper rounded-xl border border-slate-800 bg-slate-950/70">
-          <table className="responsive-access-table text-left text-sm">
-            <caption id="access-review-caption" className="visually-hidden">Access review dashboard</caption>
-            <thead className="bg-slate-900/95 text-xs tracking-wider text-slate-400 uppercase">
-              <tr>
-                <th scope="col" className="px-4 py-3">User</th>
-                <th scope="col" className="px-4 py-3">Role</th>
-                <th scope="col" className="px-4 py-3">Permission</th>
-                <th scope="col" className="px-4 py-3">Status</th>
-                <th scope="col" className="px-4 py-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800/80">
-              {ACCESS_ROWS.map((row) => {
-                const isFlagged = Boolean(flagged[row.id]);
-                const teacherHighlight = isTeacher && row.unnecessary;
-                return (
-                  <tr key={row.id} className={isFlagged || teacherHighlight ? 'bg-rose-950/25' : 'hover:bg-slate-900/50'}>
-                    <th scope="row" className="px-4 py-3.5 font-semibold text-white">{row.user}</th>
-                    <td data-label="Role" className="px-4 py-3.5 text-slate-300">{row.role}</td>
-                    <td data-label="Permission" className="px-4 py-3.5 font-mono text-xs text-cyan-200">{row.permission}</td>
-                    <td data-label="Status" className="px-4 py-3.5">
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${!row.unnecessary ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
-                        {!row.unnecessary ? <UserCheck className="h-3.5 w-3.5" aria-hidden="true" /> : <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />}
-                        {row.status}
-                      </span>
-                    </td>
-                    <td data-label="Action" className="px-4 py-3.5 text-right">
-                      <button
-                        type="button"
-                        onClick={() => handleToggleFlag(row)}
-                        aria-pressed={isFlagged}
-                        className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold ${
-                          isFlagged ? 'border-rose-400 bg-rose-500/20 text-rose-100' : 'border-slate-700 bg-slate-900 text-slate-200'
-                        }`}
-                      >
-                        <UserX className="h-3.5 w-3.5" aria-hidden="true" />
-                        <span>{isFlagged ? 'Flagged' : 'Flag for Review'}</span>
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        <div aria-live="polite" className="mt-3">
-          {feedback && (
-            <p className={`rounded-xl border p-3 text-sm ${feedback.unnecessary ? 'border-emerald-400/40 bg-emerald-950/30 text-emerald-200' : 'border-amber-400/40 bg-amber-950/25 text-amber-200'}`}>
-              <Shield className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
-              {feedback.explanation}
-            </p>
-          )}
-        </div>
+        {firstInvestigateChoice !== null && (
+          <p className="mt-4 text-xs font-bold">
+            {firstInvestigateChoice === 'user_b' ? (
+              <span className="text-emerald-400 flex items-center gap-1.5">
+                <CheckCircle2 className="h-4 w-4" />
+                Spot on! User B left the company 3 months ago. A login from a former employee with Master Admin rights at 11:45 PM is an emergency! (+25 pts)
+              </span>
+            ) : (
+              <span className="text-rose-400">
+                ⚠️ While User C has excessive permissions, User B is a former employee actively logging into Master Admin from outside the company—that requires immediate emergency containment first!
+              </span>
+            )}
+          </p>
+        )}
       </section>
 
       <ConceptCard
-        title="Why Regular Access Reviews Matter"
-        whatIsIt="Checking user roles and permissions periodically to remove unnecessary or old Admin access."
-        whyItMatters="Unused old accounts and guest Admin accounts are easy targets for attackers."
-        simpleExample="Flagging OldUser and GuestUser while keeping Rahul (Developer) and Arun (Tester)."
-        analogy="Checking the building guest list and taking back keys from people who no longer work there."
-        expectedAnswer="OldUser and GuestUser should be reviewed and removed from Admin."
+        title="Access Review"
+        whatIsIt="A recurring security audit inspecting who has what access in the cloud environment."
+        whyItMatters="Without access reviews, old accounts and unneeded admin rights remain open forever."
+        simpleExample="Checking the office key register and disabling badges of employees who no longer work here."
+        analogy="Auditing a hotel master key register: retrieving keys from guests who checked out last week."
       />
 
       <QuickCheck
-        id="m2-q1"
-        question="Which accounts in our Access Review table should NOT have Admin Full Access?"
-        options={['OldUser and GuestUser', 'Rahul and Arun']}
+        id="access-rev-q1"
+        question="What should happen to an employee's cloud credentials when they depart the company?"
+        options={[
+          'Revoke and disable all accounts immediately on their last day',
+          'Leave the account active in case they want to log in next year',
+          'Upgrade their account to Master Administrator',
+        ]}
         correctIndex={0}
-        explanation="OldUser and GuestUser have Full Admin Access that is not required."
+        explanation="Forgotten active accounts of former employees are one of the most common causes of serious cloud breaches."
       />
     </div>
   );

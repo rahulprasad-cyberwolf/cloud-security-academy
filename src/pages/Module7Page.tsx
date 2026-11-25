@@ -2,209 +2,216 @@ import { useState } from 'react';
 import { ConceptCard } from '../components/ConceptCard';
 import { QuickCheck } from '../components/QuickCheck';
 import { useCourse } from '../context/CourseContext';
+import { CheckCircle2 } from 'lucide-react';
+
+interface RoleAssignment {
+  name: string;
+  job: string;
+  avatar: string;
+  correctRole: string;
+  allowedResources: string[];
+}
+
+const EMPLOYEES: RoleAssignment[] = [
+  { name: 'Priya', job: 'Developer', avatar: '👩‍💻', correctRole: 'Developer', allowedResources: ['Dev Code Repo', 'Test Database', 'Application Logs'] },
+  { name: 'Kavita', job: 'HR Manager', avatar: '👩‍💼', correctRole: 'HR Manager', allowedResources: ['Employee Records', 'Payroll Docs'] },
+  { name: 'Sanjay', job: 'Cloud Admin', avatar: '👨‍💼', correctRole: 'Admin', allowedResources: ['IAM User Management', 'Cloud Billing', 'Master Security Policies'] },
+];
+
+const ROLES = ['Developer', 'HR Manager', 'Admin'];
 
 export function Module7Page() {
-  const { progress, recordChallengeSuccess } = useCourse();
-  const [accessPath, setAccessPath] = useState<'granted' | 'denied'>('granted');
-  const [removedKeys, setRemovedKeys] = useState<Record<number, boolean>>({});
-  const isTeacher = progress.mode === 'teacher';
+  const { recordChallengeSuccess } = useCourse();
+  const [assignedRoles, setAssignedRoles] = useState<Record<string, string>>({});
 
-  const keys = [
-    { id: 1, label: 'Dev App Key', required: true },
-    { id: 2, label: 'Dev Logs Key', required: true },
-    { id: 3, label: 'Billing Admin Key', required: false },
-    { id: 4, label: 'All-Users Delete Key', required: false },
-    { id: 5, label: 'Master Admin Key', required: false },
-  ];
-
-  const handleToggleKey = (id: number, required: boolean) => {
-    if (required) return;
-    const next = { ...removedKeys, [id]: !removedKeys[id] };
-    setRemovedKeys(next);
-    if (next[3] && next[4] && next[5]) {
-      recordChallengeSuccess('m7-least-privilege-keys', 20, 'lab-least-privilege');
+  const handleAssignRole = (empName: string, role: string) => {
+    const updated = { ...assignedRoles, [empName]: role };
+    setAssignedRoles(updated);
+    if (Object.keys(updated).length === EMPLOYEES.length) {
+      const allCorrect = EMPLOYEES.every((e) => updated[e.name] === e.correctRole);
+      if (allCorrect) {
+        recordChallengeSuccess('m7-role-assignment', 25, 'lab-roles');
+      }
     }
   };
 
-  const extraKeysLeft = keys.filter((k) => !k.required && !removedKeys[k.id]).length;
+  const allAssignedCorrect = EMPLOYEES.every((e) => assignedRoles[e.name] === e.correctRole);
 
   return (
     <div className="space-y-6">
       <header className="glass-card rounded-2xl p-6">
         <h1 id="main-content" tabIndex={-1} className="text-2xl font-bold text-white sm:text-3xl">
-          Identity, Access & Least Privilege
+          Identity & Access Management (IAM)
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-300 sm:text-base">
-          Who can access the cloud? What can they access? What can they do?
+          Who can access the cloud? What can they access? What actions can they take?
+          <br />
+          <strong className="text-cyan-300">USER ➔ LOGIN ➔ IDENTITY ➔ ROLE ➔ PERMISSION ➔ RESOURCE</strong>
         </p>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-cyan-400/30 bg-cyan-950/20 p-3.5">
-            <p className="text-xs font-bold text-cyan-300">AUTHENTICATION</p>
-            <p className="mt-1 text-xs text-slate-200">“Are you really the person you claim to be?”</p>
-          </div>
-          <div className="rounded-xl border border-emerald-400/30 bg-emerald-950/20 p-3.5">
-            <p className="text-xs font-bold text-emerald-300">AUTHORIZATION</p>
-            <p className="mt-1 text-xs text-slate-200">“What are you allowed to access?”</p>
-          </div>
-          <div className="rounded-xl border border-sky-400/30 bg-sky-950/20 p-3.5">
-            <p className="text-xs font-bold text-sky-300">PERMISSIONS</p>
-            <p className="mt-1 text-xs text-slate-200">Specific actions allowed (Read, Write, Admin).</p>
+            <p className="text-xs font-bold text-cyan-300">1. IDENTITY</p>
+            <p className="mt-1 text-xs text-slate-200">The digital identity (e.g. priya@company.com).</p>
           </div>
           <div className="rounded-xl border border-amber-400/30 bg-amber-950/20 p-3.5">
-            <p className="text-xs font-bold text-amber-300">ROLES</p>
-            <p className="mt-1 text-xs text-slate-200">Job-based bundle (Developer, Tester, Admin).</p>
+            <p className="text-xs font-bold text-amber-300">2. ROLE</p>
+            <p className="mt-1 text-xs text-slate-200">Job position grouping permissions (Developer, HR, Admin).</p>
+          </div>
+          <div className="rounded-xl border border-emerald-400/30 bg-emerald-950/20 p-3.5">
+            <p className="text-xs font-bold text-emerald-300">3. PERMISSIONS</p>
+            <p className="mt-1 text-xs text-slate-200">Specific rights granted (Read code, Write data, Manage users).</p>
           </div>
         </div>
       </header>
 
-      {/* Large SVG: USER -> LOGIN -> AUTHENTICATION -> AUTHORIZATION -> RESOURCE -> ACCESS GRANTED / DENIED */}
+      {/* Large SVG: USER -> LOGIN -> IDENTITY -> ROLE -> PERMISSION -> RESOURCE */}
       <section className="glass-card rounded-2xl p-6">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-lg font-bold text-white">
-            Identity & Access Flow (Animated Paths)
-          </h2>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setAccessPath('granted')}
-              aria-pressed={accessPath === 'granted'}
-              className={`min-h-[38px] rounded-xl border px-3.5 py-1.5 text-xs font-bold ${
-                accessPath === 'granted' ? 'border-emerald-400 bg-emerald-500/20 text-emerald-200' : 'border-slate-700 bg-slate-900 text-slate-300'
-              }`}
-            >
-              ✅ ACCESS GRANTED
-            </button>
-            <button
-              type="button"
-              onClick={() => setAccessPath('denied')}
-              aria-pressed={accessPath === 'denied'}
-              className={`min-h-[38px] rounded-xl border px-3.5 py-1.5 text-xs font-bold ${
-                accessPath === 'denied' ? 'border-rose-400 bg-rose-500/20 text-rose-200' : 'border-slate-700 bg-slate-900 text-slate-300'
-              }`}
-            >
-              ⛔ ACCESS DENIED
-            </button>
-          </div>
-        </div>
-
+        <h2 className="text-lg font-bold text-white mb-2">The Complete IAM Flow</h2>
+        <p className="text-xs text-slate-400 mb-4">Every cloud request passes through these 6 distinct security gates.</p>
         <div className="rounded-2xl border border-slate-800 bg-slate-950/85 p-4">
           <svg
             role="img"
-            aria-label={`Access flow showing ${accessPath === 'granted' ? 'Access Granted' : 'Access Denied'}`}
-            viewBox="0 0 800 130"
+            aria-label="IAM Flow: User to Login to Identity to Role to Permission to Resource"
+            viewBox="0 0 780 110"
             className="h-auto w-full"
           >
-            {['USER', 'LOGIN', 'AUTHENTICATION', 'AUTHORIZATION', 'RESOURCE', accessPath === 'granted' ? 'ACCESS GRANTED' : 'ACCESS DENIED'].map(
-              (label, idx) => {
-                const x = 10 + idx * 132;
-                const isLast = idx === 5;
-                const stroke = isLast
-                  ? accessPath === 'granted'
-                    ? '#34d399'
-                    : '#fb7185'
-                  : accessPath === 'granted'
-                    ? '#22d3ee'
-                    : idx >= 3
-                      ? '#fb7185'
-                      : '#22d3ee';
-                return (
-                  <g key={label}>
-                    <rect x={x} y={28} width="112" height="68" rx="10" fill="#0f172a" stroke={stroke} strokeWidth="2" />
-                    <text x={x + 56} y={66} textAnchor="middle" fill="#fff" fontSize="9.5" fontWeight="700">
-                      {label}
-                    </text>
-                    {idx < 5 && (
-                      <line x1={x + 112} y1={62} x2={x + 132} y2={62} stroke={stroke} strokeWidth="2.5" className="animate-flow" />
-                    )}
-                  </g>
-                );
-              }
-            )}
+            {[
+              { label: 'USER', sub: 'Employee / Dev', color: '#38bdf8' },
+              { label: 'LOGIN', sub: 'Submits Credentials', color: '#818cf8' },
+              { label: 'IDENTITY', sub: 'Verified Account', color: '#34d399' },
+              { label: 'ROLE', sub: 'Job Function', color: '#fbbf24' },
+              { label: 'PERMISSION', sub: 'Read / Write', color: '#fb7185' },
+              { label: 'RESOURCE', sub: 'Dev App / DB', color: '#22d3ee' },
+            ].map((node, idx) => {
+              const x = 12 + idx * 128;
+              return (
+                <g key={node.label}>
+                  <rect x={x} y={18} width="108" height="74" rx="12" fill="#0f172a" stroke={node.color} strokeWidth="2" />
+                  <text x={x + 54} y={50} textAnchor="middle" fill="#fff" fontSize="11" fontWeight="700">
+                    {node.label}
+                  </text>
+                  <text x={x + 54} y={70} textAnchor="middle" fill={node.color} fontSize="9">
+                    {node.sub}
+                  </text>
+                  {idx < 5 && (
+                    <line x1={x + 108} y1={55} x2={x + 128} y2={55} stroke="#22d3ee" strokeWidth="2.5" className="animate-flow" />
+                  )}
+                </g>
+              );
+            })}
           </svg>
-          <p aria-live="polite" className="mt-3 text-sm text-slate-200">
-            {accessPath === 'granted'
-              ? '✅ Identity verified (Authentication) AND permission approved (Authorization) → ACCESS GRANTED.'
-              : '⛔ Either identity failed OR the user lacked permission for this resource → ACCESS DENIED.'}
-          </p>
         </div>
       </section>
 
-      {/* Least Privilege Interactive Keys SVG */}
+      {/* Interactive Activity: Give the Correct Access */}
       <section className="glass-card rounded-2xl p-6">
-        <h2 className="text-lg font-bold text-white">
-          Least Privilege Activity: Remove the Unnecessary Keys
-        </h2>
-        <p className="mt-1 mb-4 text-sm text-slate-300">
-          “Give only the permissions required for the job.” A developer needs development access—not
-          full administrator keys! Click the <strong>3 unnecessary keys</strong> below to remove them.
-        </p>
-
-        <div className="rounded-2xl border border-slate-800 bg-slate-950/85 p-4">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs font-bold">
-            <span className="text-rose-300">FULL ACCESS: 🔑 🔑 🔑 🔑 🔑</span>
-            <span className="text-emerald-300">REQUIRED ACCESS: 🔑 🔑</span>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div>
+            <h2 className="text-lg font-bold text-white">Interactive Activity: Give the Correct Access</h2>
+            <p className="text-xs text-slate-400">Assign the appropriate Role to each employee so they get only the resources they need.</p>
           </div>
-
-          <div className="grid gap-2.5 sm:grid-cols-5">
-            {keys.map((k) => {
-              const isRemoved = Boolean(removedKeys[k.id]);
-              return (
-                <button
-                  key={k.id}
-                  type="button"
-                  onClick={() => handleToggleKey(k.id, k.required)}
-                  disabled={k.required}
-                  aria-pressed={isRemoved}
-                  className={`min-h-[64px] rounded-xl border p-3 text-center text-xs font-bold transition-all ${
-                    k.required
-                      ? 'border-emerald-400/60 bg-emerald-950/30 text-emerald-200 cursor-default'
-                      : isRemoved
-                        ? 'border-slate-800 bg-slate-950 text-slate-600 opacity-40'
-                        : isTeacher
-                          ? 'border-rose-400 bg-rose-950/35 text-rose-200'
-                          : 'border-amber-400/60 bg-amber-950/25 text-amber-200 hover:border-rose-400'
-                  }`}
-                >
-                  <span className="block text-lg" aria-hidden="true">
-                    {isRemoved ? '✖️' : '🔑'}
-                  </span>
-                  <span>{k.label}</span>
-                  <span className="mt-1 block text-[10px] opacity-80">
-                    {k.required ? 'Required' : isRemoved ? 'Removed' : 'Click to remove'}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          <p aria-live="polite" className="mt-3 text-sm font-semibold text-emerald-300">
-            {extraKeysLeft === 0
-              ? '🎉 Least Privilege applied! Only the 2 required development keys remain (+20 pts).'
-              : `${extraKeysLeft} unnecessary keys still active — too much access increases risk!`}
-          </p>
+          <span className="rounded-xl border border-cyan-400/40 bg-cyan-500/10 px-3 py-1 text-xs font-bold text-cyan-300">
+            Assigned: {Object.keys(assignedRoles).length} / {EMPLOYEES.length}
+          </span>
         </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {EMPLOYEES.map((emp) => {
+            const currentRole = assignedRoles[emp.name];
+            const isCorrect = currentRole === emp.correctRole;
+            return (
+              <div
+                key={emp.name}
+                className={`rounded-2xl border p-5 transition-all flex flex-col justify-between ${
+                  currentRole
+                    ? isCorrect
+                      ? 'border-emerald-500/50 bg-emerald-950/20'
+                      : 'border-rose-500/50 bg-rose-950/20'
+                    : 'border-slate-700 bg-slate-900/70'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl">{emp.avatar}</span>
+                    <div>
+                      <h3 className="text-base font-bold text-white">{emp.name}</h3>
+                      <p className="text-xs text-cyan-300 font-semibold">{emp.job}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 rounded-xl bg-slate-950/70 p-3 text-xs">
+                    <p className="text-slate-400 uppercase font-bold text-[10px]">Needed Resources:</p>
+                    <ul className="mt-1 space-y-0.5 text-slate-200">
+                      {emp.allowedResources.map((res) => (
+                        <li key={res}>• {res}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  <p className="text-[11px] font-bold text-slate-400 uppercase mb-1.5">Select Role:</p>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {ROLES.map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => handleAssignRole(emp.name, r)}
+                        className={`rounded-lg py-1.5 text-xs font-bold transition-all ${
+                          currentRole === r
+                            ? r === emp.correctRole
+                              ? 'bg-emerald-500 text-slate-950'
+                              : 'bg-rose-500 text-white'
+                            : 'border border-slate-700 bg-slate-800 text-slate-300 hover:border-cyan-400'
+                        }`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+
+                  {currentRole && (
+                    <p className="mt-2 text-[11px] text-center font-bold">
+                      {isCorrect ? (
+                        <span className="text-emerald-400">✅ Correct Role Assigned</span>
+                      ) : (
+                        <span className="text-rose-400">⚠️ Wrong Role! Check Least Privilege</span>
+                      )}
+                    </p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {allAssignedCorrect && (
+          <p className="mt-4 flex items-center gap-2 text-sm font-bold text-emerald-300">
+            <CheckCircle2 className="h-5 w-5" />
+            Awesome! You assigned the exact right roles without granting excessive permissions. (+25 pts)
+          </p>
+        )}
       </section>
 
       <ConceptCard
-        title="Least Privilege"
-        whatIsIt="Giving each user only the permissions required for their job."
-        whyItMatters="Too much access increases risk if an account is hacked or makes a mistake."
-        simpleExample="A developer gets Dev App Key + Dev Logs Key, not Master Admin Key."
-        analogy="Giving a delivery driver the porch key instead of every key in your house."
-        expectedAnswer="Removing extra keys limits damage if an account is compromised."
-        commonConfusion="Thinking developers automatically need Full Administrator access."
+        title="Identity & Access Management (IAM)"
+        whatIsIt="The cloud control plane managing identities, roles, and resource access policies."
+        whyItMatters="Without IAM, anyone with a valid link could alter databases, delete files, or read employee information."
+        simpleExample="Assigning Priya a Developer role instead of giving her root administrator keys."
+        analogy="A corporate badge system: an engineer's badge opens the server room and labs, but not the executive vault."
       />
 
       <QuickCheck
         id="m7-q1"
-        question="What is the difference between Authentication and Authorization?"
+        question="Why should a Developer NOT be assigned the Full Admin role?"
         options={[
-          'Authentication proves who you are; Authorization decides what you are allowed to access',
-          'Authentication is only for logs; Authorization is only for secrets',
+          'To follow Least Privilege: if their account is compromised, the attacker cannot delete the entire cloud environment',
+          'Because developers do not know how to write code',
+          'Because cloud providers charge 10x more for admin accounts',
         ]}
         correctIndex={0}
-        explanation="Authentication = 'Are you really Rahul?' Authorization = 'What is Rahul allowed to access?'"
+        explanation="Limiting permissions protects the entire organization against stolen credentials and accidental mistakes."
       />
     </div>
   );

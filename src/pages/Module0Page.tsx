@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ConceptCard } from '../components/ConceptCard';
 import { QuickCheck } from '../components/QuickCheck';
 import { useCourse } from '../context/CourseContext';
+import { CheckCircle2 } from 'lucide-react';
 
 const FLOW_LAYERS = [
   { id: 'user', label: 'USER', desc: 'A student, developer, or visitor trying to use a cloud app.' },
@@ -13,73 +14,52 @@ const FLOW_LAYERS = [
   { id: 'security', label: 'SECURITY', desc: 'All protections working together so the right people get the right access.' },
 ];
 
-const PROTECTED_ITEMS = [
-  {
-    id: 'users',
-    label: 'Users',
-    what: 'Accounts for students, developers, testers, and admins.',
-    why: 'If an attacker steals a user account, they can pretend to be that person.',
-    wrong: 'Weak passwords or old unused accounts left active.',
-  },
-  {
-    id: 'apps',
-    label: 'Applications',
-    what: 'Web portals, mobile backends, and tools running in the cloud.',
-    why: 'Apps are the front door users interact with every day.',
-    wrong: 'Bugs or exposed keys inside app code.',
-  },
-  {
-    id: 'storage',
-    label: 'Storage',
-    what: 'Cloud folders holding documents, photos, and backups.',
-    why: 'Private files belong only to authorized people.',
-    wrong: 'Storage accidentally left Public 🔓 for anyone on the internet.',
-  },
-  {
-    id: 'database',
-    label: 'Database',
-    what: 'Organized tables of usernames, emails, and records.',
-    why: 'Contains sensitive personal or company information.',
-    wrong: 'Open database access or too many users having Admin rights.',
-  },
-  {
-    id: 'secrets',
-    label: 'Secrets',
-    what: 'Passwords, API keys, and access tokens.',
-    why: 'Whoever holds a secret holds the key to the cloud.',
-    wrong: 'Secrets pasted into public GitHub repositories.',
-  },
-  {
-    id: 'configs',
-    label: 'Configurations',
-    what: 'Security settings and permission rules for cloud resources.',
-    why: 'One wrong switch can undo strong protections.',
-    wrong: 'Public access turned ON or logging turned OFF.',
-  },
-  {
-    id: 'logs',
-    label: 'Logs',
-    what: 'Records of who logged in, what they opened, and what changed.',
-    why: 'Logs are your proof and timeline during an investigation.',
-    wrong: 'Logging disabled so nobody knows what happened.',
-  },
+const SECURITY_MINDSET = [
+  { step: 'IDENTIFY', title: '1. IDENTIFY', desc: 'Know all your cloud users, databases, files, and secrets.', icon: '🔍', color: '#38bdf8' },
+  { step: 'PROTECT', title: '2. PROTECT', desc: 'Lock doors with strong passwords, MFA, and Least Privilege.', icon: '🛡️', color: '#34d399' },
+  { step: 'DETECT', title: '3. DETECT', desc: 'Watch logs and alerts continuously for unusual activity.', icon: '👁️', color: '#fbbf24' },
+  { step: 'RESPOND', title: '4. RESPOND', desc: 'Contain suspicious accounts and stop dangerous access fast.', icon: '🚨', color: '#fb7185' },
+  { step: 'RECOVER', title: '5. RECOVER', desc: 'Fix misconfigurations, rotate keys, and restore safe operations.', icon: '🔄', color: '#a78bfa' },
+];
+
+interface ProtectionCard {
+  id: string;
+  name: string;
+  desc: string;
+  requiresProtection: boolean;
+  explanation: string;
+}
+
+const PROTECTION_CARDS: ProtectionCard[] = [
+  { id: 'account', name: 'User Account', desc: 'Login profiles for employees, devs, and students', requiresProtection: true, explanation: 'Compromised accounts allow attackers to pose as valid users.' },
+  { id: 'database', name: 'Database', desc: 'Customer data, financial records, student grades', requiresProtection: true, explanation: 'Contains sensitive private records that need encryption and strict access.' },
+  { id: 'storage', name: 'Storage Bucket', desc: 'Cloud storage folders with invoices and backups', requiresProtection: true, explanation: 'Must remain Private 🔒 so unauthorized internet visitors cannot download files.' },
+  { id: 'api', name: 'API Endpoints', desc: 'Interfaces connecting mobile apps to backend services', requiresProtection: true, explanation: 'Unprotected APIs can be abused to extract massive amounts of data.' },
+  { id: 'password', name: 'Passwords', desc: 'User credentials used during authentication', requiresProtection: true, explanation: 'Must be strong, hashed, salted, and backed with MFA.' },
+  { id: 'secret', name: 'Secret Keys / Tokens', desc: 'API keys, database passwords, private tokens', requiresProtection: true, explanation: 'Whoever holds a secret holds the master key to your cloud resources.' },
+  { id: 'logs', name: 'Audit Logs', desc: 'Activity records of who did what and when', requiresProtection: true, explanation: 'Logs must be tamper-proof and protected so attackers cannot delete their trail.' },
 ];
 
 export function Module0Page() {
   const { recordChallengeSuccess } = useCourse();
   const [selectedLayer, setSelectedLayer] = useState(FLOW_LAYERS[0]);
-  const [selectedItem, setSelectedItem] = useState(PROTECTED_ITEMS[0]);
+  const [selectedMindset, setSelectedMindset] = useState(SECURITY_MINDSET[0]);
+  const [decisions, setDecisions] = useState<Record<string, boolean>>({});
 
-  const handleSelectItem = (item: (typeof PROTECTED_ITEMS)[number]) => {
-    setSelectedItem(item);
-    recordChallengeSuccess(`m0-protect-${item.id}`, 3);
+  const handleDecision = (id: string, userChoiceNeedsProtection: boolean) => {
+    setDecisions((prev) => ({ ...prev, [id]: userChoiceNeedsProtection }));
+    if (Object.keys({ ...decisions, [id]: userChoiceNeedsProtection }).length === PROTECTION_CARDS.length) {
+      recordChallengeSuccess('m0-protection-cards', 25, 'lab-choose-protection');
+    }
   };
+
+  const answeredCount = Object.keys(decisions).length;
 
   return (
     <div className="space-y-6">
       <header className="glass-card rounded-2xl p-6">
         <h1 id="main-content" tabIndex={-1} className="text-2xl font-bold text-white sm:text-3xl">
-          What is Cloud Security?
+          Cloud Security — Introduction
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-300 sm:text-base">
           <strong className="text-cyan-300">
@@ -90,13 +70,15 @@ export function Module0Page() {
 
         <div className="mt-4 flex flex-wrap gap-2 text-xs">
           {[
-            'Cloud Accounts',
-            'Cloud Resources',
-            'Applications',
-            'Data',
+            'Identity',
             'Access',
-            'Credentials',
+            'Data',
+            'Cloud Resources',
+            'Secrets',
             'Configurations',
+            'Logs',
+            'Applications',
+            'APIs',
           ].map((tag) => (
             <span
               key={tag}
@@ -108,11 +90,31 @@ export function Module0Page() {
         </div>
       </header>
 
+      {/* What Changes When Moving to Cloud */}
+      <section className="glass-card rounded-2xl p-6">
+        <h2 className="text-lg font-bold text-white">What Changes in Cloud Security?</h2>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-cyan-500/30 bg-slate-900/70 p-4">
+            <p className="font-bold text-cyan-300 text-sm">Everywhere Access</p>
+            <p className="mt-1 text-xs text-slate-300">Resources are accessible over the internet from any device, not just an office desk.</p>
+          </div>
+          <div className="rounded-xl border border-amber-500/30 bg-slate-900/70 p-4">
+            <p className="font-bold text-amber-300 text-sm">Identity is the New Perimeter</p>
+            <p className="mt-1 text-xs text-slate-300">Instead of office walls and physical gates, digital identity and permissions guard everything.</p>
+          </div>
+          <div className="rounded-xl border border-emerald-500/30 bg-slate-900/70 p-4">
+            <p className="font-bold text-emerald-300 text-sm">Rapid Software Changes</p>
+            <p className="mt-1 text-xs text-slate-300">Resources spin up and change in seconds, making automated monitoring and audit logs vital.</p>
+          </div>
+        </div>
+      </section>
+
       {/* Large Clickable SVG: USER -> IDENTITY -> ACCESS CONTROL -> CLOUD RESOURCE -> DATA -> MONITORING -> SECURITY */}
       <section className="glass-card rounded-2xl p-6">
         <h2 className="text-lg font-bold text-white">
           How Cloud Security Works (Click Every Component)
         </h2>
+        <p className="mt-1 text-xs text-slate-400">Click any block to see how requests flow securely through each protective layer.</p>
         <div className="mt-4 rounded-2xl border border-slate-800 bg-slate-950/85 p-4">
           <svg
             role="img"
@@ -124,7 +126,7 @@ export function Module0Page() {
               const x = 8 + idx * 120;
               const active = selectedLayer.id === layer.id;
               return (
-                <g key={layer.id}>
+                <g key={layer.id} className="cursor-pointer" onClick={() => setSelectedLayer(layer)}>
                   <rect
                     x={x}
                     y={24}
@@ -161,9 +163,9 @@ export function Module0Page() {
                 type="button"
                 onClick={() => setSelectedLayer(layer)}
                 aria-pressed={selectedLayer.id === layer.id}
-                className={`min-h-[38px] rounded-xl border px-3 py-1.5 text-xs font-bold ${
+                className={`min-h-[38px] rounded-xl border px-3 py-1.5 text-xs font-semibold ${
                   selectedLayer.id === layer.id
-                    ? 'border-cyan-400 bg-cyan-500/20 text-cyan-100'
+                    ? 'border-cyan-400 bg-cyan-500/20 text-cyan-200'
                     : 'border-slate-700 bg-slate-900 text-slate-300'
                 }`}
               >
@@ -172,113 +174,155 @@ export function Module0Page() {
             ))}
           </div>
 
-          <div aria-live="polite" className="mt-3 rounded-xl border border-cyan-500/30 bg-slate-900/90 p-3.5 text-sm">
-            <strong className="text-cyan-300">{selectedLayer.label}:</strong>{' '}
-            <span className="text-white">{selectedLayer.desc}</span>
-          </div>
+          <p aria-live="polite" className="mt-3 text-sm text-cyan-200">
+            <strong>{selectedLayer.label}:</strong> {selectedLayer.desc}
+          </p>
         </div>
       </section>
 
-      {/* What Are We Protecting? Interactive Connected Cloud Environment */}
+      {/* Security Mindset: IDENTIFY -> PROTECT -> DETECT -> RESPOND -> RECOVER */}
       <section className="glass-card rounded-2xl p-6">
-        <h2 className="text-lg font-bold text-white">
-          What Are We Protecting? (Click Any Resource)
-        </h2>
-        <p className="mb-4 text-sm text-slate-400">
-          All 7 resources below are connected inside a cloud environment. Click each one to see why
-          it needs protection.
-        </p>
-
-        <div className="grid items-center gap-6 rounded-2xl border border-slate-800 bg-slate-950/85 p-5 md:grid-cols-12">
-          <div className="md:col-span-6">
-            <svg
-              role="img"
-              aria-label="Connected cloud resources: Users, Applications, Storage, Database, Secrets, Configurations, and Logs"
-              viewBox="0 0 360 220"
-              className="h-auto w-full"
+        <h2 className="text-lg font-bold text-white">The 5 Core Cloud Security Mindset Steps</h2>
+        <p className="mt-1 text-xs text-slate-400">Click each step to understand the complete security cycle.</p>
+        
+        <div className="mt-4 grid gap-2 sm:grid-cols-5">
+          {SECURITY_MINDSET.map((s) => (
+            <button
+              key={s.step}
+              type="button"
+              onClick={() => setSelectedMindset(s)}
+              className={`rounded-xl border p-3 text-left transition-all ${
+                selectedMindset.step === s.step ? 'border-cyan-400 bg-cyan-950/40 ring-1 ring-cyan-400' : 'border-slate-700/70 bg-slate-900/60'
+              }`}
             >
-              <circle cx="180" cy="110" r="36" fill="rgba(16,185,129,0.16)" stroke="#34d399" strokeWidth="2.5" />
-              <text x="180" y="108" textAnchor="middle" fill="#fff" fontSize="10" fontWeight="700">CLOUD</text>
-              <text x="180" y="121" textAnchor="middle" fill="#6ee7b7" fontSize="9.5" fontWeight="700">SECURITY</text>
-
-              {PROTECTED_ITEMS.map((item, idx) => {
-                const angle = (idx / PROTECTED_ITEMS.length) * Math.PI * 2 - Math.PI / 2;
-                const cx = 180 + Math.cos(angle) * 112;
-                const cy = 110 + Math.sin(angle) * 82;
-                const active = selectedItem.id === item.id;
-                return (
-                  <g key={item.id}>
-                    <line x1="180" y1="110" x2={cx} y2={cy} stroke={active ? '#22d3ee' : '#334155'} strokeWidth="1.8" className="animate-flow" />
-                    <rect
-                      x={cx - 42}
-                      y={cy - 14}
-                      width="84"
-                      height="28"
-                      rx="8"
-                      fill={active ? '#0891b2' : '#0f172a'}
-                      stroke={active ? '#22d3ee' : '#475569'}
-                      strokeWidth="1.5"
-                    />
-                    <text x={cx} y={cy + 4} textAnchor="middle" fill="#fff" fontSize="9.5" fontWeight="700">
-                      {item.label}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
-
-          <div className="space-y-3 md:col-span-6">
-            <div className="flex flex-wrap gap-2">
-              {PROTECTED_ITEMS.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => handleSelectItem(item)}
-                  aria-pressed={selectedItem.id === item.id}
-                  className={`min-h-[36px] rounded-lg border px-3 py-1 text-xs font-semibold ${
-                    selectedItem.id === item.id
-                      ? 'border-cyan-400 bg-cyan-500/20 text-cyan-100'
-                      : 'border-slate-700 bg-slate-900 text-slate-300'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
-
-            <div aria-live="polite" className="space-y-2 rounded-xl border border-slate-700 bg-slate-900/80 p-4 text-xs sm:text-sm">
-              <p className="font-bold text-cyan-300">{selectedItem.label}</p>
-              <p className="text-slate-200"><strong>What it is:</strong> {selectedItem.what}</p>
-              <p className="text-emerald-200"><strong>Why protect it:</strong> {selectedItem.why}</p>
-              <p className="text-rose-200"><strong>What could go wrong:</strong> {selectedItem.wrong}</p>
-            </div>
-          </div>
+              <span className="text-xl">{s.icon}</span>
+              <p className="mt-1 text-xs font-bold text-white">{s.title}</p>
+            </button>
+          ))}
         </div>
+
+        <div className="mt-4 rounded-xl border border-cyan-400/30 bg-slate-950/90 p-4">
+          <p className="text-base font-bold text-white">{selectedMindset.title}</p>
+          <p className="mt-1 text-sm text-slate-200">{selectedMindset.desc}</p>
+        </div>
+      </section>
+
+      {/* Fictional Scenario */}
+      <section className="glass-card rounded-2xl border border-rose-500/30 p-6">
+        <h2 className="text-lg font-bold text-rose-300">Fictional Real-World Attack Scenario</h2>
+        <div className="mt-3 rounded-xl bg-slate-950/80 p-4 text-xs sm:text-sm text-slate-200 space-y-2">
+          <p>🏢 <strong>Scenario:</strong> A company hosts its student portal and database in the cloud.</p>
+          <p>⚠️ <strong>The Threat:</strong> An employee account password is leaked on the dark web. An attacker uses it to sign into the cloud at 02:14 AM from another country.</p>
+          <p>🛡️ <strong>How Cloud Security Works:</strong></p>
+          <ul className="list-disc pl-5 space-y-1 text-slate-300">
+            <li><strong>PROTECT (MFA):</strong> An OTP code is required, stopping the attacker even if they know the password.</li>
+            <li><strong>DETECT (Logging & Alerting):</strong> If MFA was missing, the abnormal login time and location instantly trigger a <em>CRITICAL ALERT</em>.</li>
+            <li><strong>RESPOND (Containment):</strong> Security analysts immediately revoke the session and lock the account.</li>
+            <li><strong>RECOVER:</strong> The employee changes credentials, MFA is enforced, and audit logs are analyzed to ensure no data was touched.</li>
+          </ul>
+        </div>
+      </section>
+
+      {/* Interactive Activity: Choose what needs protection */}
+      <section className="glass-card rounded-2xl p-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-lg font-bold text-white">Interactive Activity: Choose What Needs Protection</h2>
+            <p className="text-xs text-slate-400">Does each component require security protection in the cloud? Make your choice for each item.</p>
+          </div>
+          <span className="rounded-xl border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-300">
+            Completed: {answeredCount} / {PROTECTION_CARDS.length}
+          </span>
+        </div>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {PROTECTION_CARDS.map((card) => {
+            const hasChosen = decisions[card.id] !== undefined;
+            const userChoice = decisions[card.id];
+            const isCorrect = userChoice === card.requiresProtection;
+            return (
+              <div
+                key={card.id}
+                className={`flex flex-col justify-between rounded-xl border p-4 transition-all ${
+                  hasChosen
+                    ? isCorrect
+                      ? 'border-emerald-500/50 bg-emerald-950/20'
+                      : 'border-rose-500/50 bg-rose-950/20'
+                    : 'border-slate-700 bg-slate-900/60'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold text-white">{card.name}</p>
+                    {hasChosen && (
+                      <span className="text-xs font-bold text-emerald-400">
+                        {isCorrect ? '✅ Requires Protection' : '⚠️ Must be protected!'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-slate-300">{card.desc}</p>
+                  {hasChosen && (
+                    <p className="mt-2 text-[11px] text-cyan-200 border-t border-slate-800 pt-2">
+                      💡 {card.explanation}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleDecision(card.id, true)}
+                    className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition-all ${
+                      userChoice === true
+                        ? 'bg-emerald-500 text-slate-950'
+                        : 'border border-slate-700 bg-slate-800 text-slate-200 hover:border-emerald-400'
+                    }`}
+                  >
+                    🛡️ Needs Protection
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDecision(card.id, false)}
+                    className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-all ${
+                      userChoice === false
+                        ? 'bg-rose-500 text-white'
+                        : 'border border-slate-700 bg-slate-800 text-slate-400 hover:text-slate-200'
+                    }`}
+                  >
+                    No
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {answeredCount === PROTECTION_CARDS.length && (
+          <p className="mt-4 flex items-center gap-2 text-sm font-bold text-emerald-300">
+            <CheckCircle2 className="h-5 w-5" />
+            Great job! You identified that ALL these core cloud components require security protection. (+25 pts)
+          </p>
+        )}
       </section>
 
       <ConceptCard
-        title="Cloud Security in One Picture"
-        whatIsIt="Protecting cloud accounts, resources, apps, data, access, credentials, and configurations."
-        whyItMatters="Without security controls, anyone could view private data or change settings."
-        simpleExample="Checking who a user is, limiting their permissions, and watching logs for 2 AM logins."
-        analogy="A well-protected building with an ID desk, locked rooms, key safe, and security cameras."
-        questionToAsk="Which cloud resource would hurt most if left unprotected?"
-        expectedAnswer="All of them matter—especially Secrets, Databases, and User Accounts, because losing them affects everything else."
-        commonConfusion="Thinking Cloud Security only means setting a password."
+        title="Cloud Security"
+        whatIsIt="Securing accounts, applications, data, secrets, and configurations running in cloud environments."
+        whyItMatters="Without security, cloud resources can be accessed, altered, or leaked publicly on the internet."
+        simpleExample="Enforcing MFA and setting sensitive storage folders to Private 🔒 instead of Public 🔓."
+        analogy="A high-tech building where keycards, biometric locks, CCTV, and guards work in tandem."
       />
 
       <QuickCheck
         id="m0-q1"
-        question="Which statement best describes Cloud Security?"
+        question="Which statement best describes the goal of Cloud Security?"
         options={[
-          'Making sure the right people get the right access to the right resources while suspicious activity is detected',
-          'Giving everyone Full Admin access to save time',
-          'Turning off all logs so nothing is recorded',
-          'Putting API keys directly into public code',
+          'Ensuring the right people have the right access to the right resources, while detecting suspicious activity',
+          'Turning off audit logs to save storage space',
+          'Giving every student full administrator permissions to everything',
         ]}
         correctIndex={0}
-        explanation="Cloud security combines right access, protected resources, and active detection."
+        explanation="Cloud security balances enabling legitimate access with strict access control and real-time threat detection."
       />
     </div>
   );

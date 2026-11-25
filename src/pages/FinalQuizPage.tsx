@@ -1,4 +1,4 @@
-import { Award, CheckCircle2, GraduationCap, Printer, RotateCcw, XCircle } from 'lucide-react';
+import { Award, CheckCircle2, Printer, RotateCcw, XCircle } from 'lucide-react';
 import { useCourse } from '../context/CourseContext';
 import { FINAL_QUIZ_QUESTIONS, MODULES } from '../data/curriculum';
 
@@ -34,11 +34,10 @@ export function FinalQuizPage() {
     <div className="space-y-6">
       <header className="glass-card no-print rounded-2xl p-6">
         <h1 id="main-content" tabIndex={-1} className="text-2xl font-bold text-white sm:text-3xl">
-          Final Assessment (15 Questions) & Certificate
+          Final Knowledge Check (12 Questions) & Certificate
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-300 sm:text-base">
-          Includes <strong>5 Multiple Choice</strong>, <strong>5 True/False</strong>, and{' '}
-          <strong>5 Scenario-Based</strong> questions across all topics.
+          Comprehensive beginner-level assessment covering all 12 core Cloud Security domains with detailed explanations.
         </p>
         <div className="mt-3 flex flex-wrap gap-3 text-xs font-semibold">
           <span className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-cyan-200">
@@ -100,7 +99,7 @@ export function FinalQuizPage() {
               Cloud Security Foundations Completed
             </p>
             <h2 className="mt-2 text-2xl font-extrabold text-white sm:text-3xl">
-              2-Hour Beginner Cloud Security Classroom
+              Cloud Security Classroom Academy
             </h2>
             <p className="mt-3 text-sm text-slate-300">Presented to</p>
 
@@ -164,59 +163,65 @@ export function FinalQuizPage() {
         </section>
       )}
 
-      <section className="no-print space-y-4">
-        {FINAL_QUIZ_QUESTIONS.map((q, qIdx) => {
-          const picked = progress.finalQuizAnswers[q.id];
-          const isCorrect = picked === q.correctIndex;
-          const typeBadge =
-            q.type === 'mcq' ? 'Multiple Choice' : q.type === 'tf' ? 'True / False' : 'Scenario';
+      {/* Quiz Questions List */}
+      <section className="space-y-4">
+        {FINAL_QUIZ_QUESTIONS.map((q, idx) => {
+          const selected = progress.finalQuizAnswers[q.id];
+          const isCorrect = selected === q.correctIndex;
+          const showAnswer = progress.finalQuizSubmitted || isTeacher;
 
           return (
-            <article key={q.id} className="glass-card rounded-2xl p-5">
-              <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                <span className="rounded-full border border-slate-700 bg-slate-900 px-2.5 py-0.5 text-xs font-semibold text-cyan-300">
-                  Q{qIdx + 1} • {typeBadge} • {q.topic}
+            <div
+              key={q.id}
+              className={`glass-card rounded-2xl p-5 transition-colors ${
+                progress.finalQuizSubmitted
+                  ? isCorrect
+                    ? 'border-emerald-400/40 bg-emerald-950/15'
+                    : 'border-rose-400/40 bg-rose-950/15'
+                  : 'hover:border-cyan-400/40'
+              }`}
+            >
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="rounded-full border border-cyan-400/30 bg-cyan-500/10 px-2.5 py-0.5 text-xs font-semibold text-cyan-200">
+                  Question {idx + 1} • {q.topic}
                 </span>
                 {progress.finalQuizSubmitted && (
                   <span
                     className={`inline-flex items-center gap-1 text-xs font-bold ${
-                      isCorrect ? 'text-emerald-400' : 'text-rose-400'
+                      isCorrect ? 'text-emerald-300' : 'text-rose-300'
                     }`}
                   >
                     {isCorrect ? (
                       <>
                         <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                        Correct
+                        <span>Correct</span>
                       </>
                     ) : (
                       <>
                         <XCircle className="h-4 w-4" aria-hidden="true" />
-                        Review Topic
+                        <span>Incorrect</span>
                       </>
                     )}
                   </span>
                 )}
               </div>
 
-              <h3 className="mb-3 text-base font-semibold text-white">{q.question}</h3>
+              <p className="text-sm font-semibold text-white sm:text-base">{q.question}</p>
 
-              <div className="grid gap-2 sm:grid-cols-2">
-                {q.options.map((opt, idx) => {
-                  const selected = picked === idx;
-                  const showTeacherKey = isTeacher && idx === q.correctIndex;
+              <div className="mt-3 grid gap-2">
+                {q.options.map((opt, optIdx) => {
+                  const isOptSelected = selected === optIdx;
+                  const isOptCorrect = optIdx === q.correctIndex;
 
-                  let style =
-                    'border-slate-700/70 bg-slate-900/70 text-slate-200 hover:border-cyan-400/50';
-                  if (progress.finalQuizSubmitted) {
-                    if (idx === q.correctIndex) {
-                      style = 'border-emerald-400 bg-emerald-500/20 text-emerald-100';
-                    } else if (selected) {
-                      style = 'border-rose-400 bg-rose-500/20 text-rose-100';
+                  let optClass = 'border-slate-700 bg-slate-900/70 text-slate-200';
+                  if (showAnswer) {
+                    if (isOptCorrect) {
+                      optClass = 'border-emerald-400 bg-emerald-500/20 text-emerald-100 font-bold';
+                    } else if (isOptSelected) {
+                      optClass = 'border-rose-400 bg-rose-500/20 text-rose-100';
                     }
-                  } else if (selected) {
-                    style = 'border-cyan-400 bg-cyan-500/20 text-cyan-100';
-                  } else if (showTeacherKey) {
-                    style = 'border-violet-400/70 bg-violet-950/35 text-violet-100';
+                  } else if (isOptSelected) {
+                    optClass = 'border-cyan-400 bg-cyan-500/20 text-cyan-100 font-bold';
                   }
 
                   return (
@@ -224,48 +229,50 @@ export function FinalQuizPage() {
                       key={opt}
                       type="button"
                       disabled={progress.finalQuizSubmitted}
-                      onClick={() => setFinalQuizAnswer(q.id, idx)}
-                      aria-pressed={selected}
-                      className={`min-h-[44px] rounded-xl border px-3.5 py-2.5 text-left text-sm transition-colors disabled:cursor-default ${style}`}
+                      onClick={() => setFinalQuizAnswer(q.id, optIdx)}
+                      className={`min-h-[44px] rounded-xl border p-3 text-left text-xs font-medium transition-all sm:text-sm ${optClass} ${
+                        !progress.finalQuizSubmitted ? 'hover:border-cyan-400/60' : ''
+                      }`}
                     >
+                      <span className="mr-2 font-bold text-slate-400">
+                        {String.fromCharCode(65 + optIdx)}.
+                      </span>
                       {opt}
                     </button>
                   );
                 })}
               </div>
 
-              {(progress.finalQuizSubmitted || isTeacher) && (
-                <div className="mt-3 rounded-xl border border-slate-700/70 bg-slate-950/70 p-3 text-xs leading-relaxed text-slate-200">
+              {showAnswer && (
+                <div className="mt-3 rounded-xl border border-slate-700/60 bg-slate-900/70 p-3 text-xs text-slate-300">
                   <p>
-                    <strong className="text-cyan-300">Explanation:</strong> {q.explanation}
+                    <strong className="text-emerald-300">Explanation:</strong> {q.explanation}
                   </p>
                   {isTeacher && (
-                    <p className="mt-1.5 flex items-center gap-1.5 text-violet-300">
-                      <GraduationCap className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                      <span>
-                        <strong>Teacher Note:</strong> {q.teacherNote}
-                      </span>
+                    <p className="mt-1 text-amber-200">
+                      <strong>Teacher Note:</strong> {q.teacherNote}
                     </p>
                   )}
                 </div>
               )}
-            </article>
+            </div>
           );
         })}
 
         {!progress.finalQuizSubmitted && (
-          <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-cyan-500/30 bg-slate-900/80 p-5">
-            <p className="text-sm text-slate-300">
-              {answeredCount < totalQuestions
-                ? `You have answered ${answeredCount} of ${totalQuestions} questions.`
-                : 'All 15 questions answered! Ready to see your score and certificate?'}
+          <div className="glass-card flex flex-wrap items-center justify-between gap-3 rounded-2xl p-5">
+            <p className="text-xs text-slate-300 sm:text-sm">
+              You answered <strong>{answeredCount}</strong> of <strong>{totalQuestions}</strong>{' '}
+              questions.
             </p>
             <button
               type="button"
+              disabled={answeredCount === 0}
               onClick={submitFinalQuiz}
-              className="min-h-[46px] rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-6 py-2.5 text-sm font-bold text-slate-950 hover:opacity-95"
+              className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 px-6 py-2.5 text-sm font-bold text-slate-950 transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Submit Final Assessment
+              <span>Submit Final Quiz</span>
+              <Award className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
         )}
