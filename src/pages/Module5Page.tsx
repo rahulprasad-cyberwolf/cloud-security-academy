@@ -1,12 +1,11 @@
-import { CheckCircle2, Code2, Lock, RefreshCw, ShieldAlert, Unlock, XCircle } from 'lucide-react';
+import { CheckCircle2, Code2, Lock, ShieldAlert, Unlock } from 'lucide-react';
 import { useState } from 'react';
 import { ConceptCard } from '../components/ConceptCard';
-import { DiscussionPrompt } from '../components/DiscussionPrompt';
 import { QuickCheck } from '../components/QuickCheck';
 import { useCourse } from '../context/CourseContext';
 
 const CODE_LINES = [
-  { num: 1, code: 'username = "rahul"', isSecret: false },
+  { num: 1, code: 'username = "student"', isSecret: false },
   { num: 2, code: 'theme = "dark"', isSecret: false },
   { num: 3, code: 'API_KEY = "DEMO-SECRET-123"', isSecret: true },
   { num: 4, code: 'timeout = 30', isSecret: false },
@@ -39,21 +38,24 @@ export function Module5Page() {
     <div className="space-y-6">
       <header className="glass-card rounded-2xl p-6">
         <h1 id="main-content" tabIndex={-1} className="text-2xl font-bold text-white sm:text-3xl">
-          Section 4: Secret Management (15 Minutes)
+          Secret Management
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-300 sm:text-base">
           A <strong className="text-cyan-300">Secret</strong> is a Password, API Key, Access Token,
-          or Database Credential. <strong className="text-amber-300">PASSWORD = HOUSE KEY</strong> •{' '}
-          <strong className="text-emerald-300">SECRET MANAGER = SECURE KEY LOCKER</strong>.
+          or Database Credential. <strong className="text-amber-300">Password = House Key</strong> •{' '}
+          <strong className="text-emerald-300">Secret Manager = Secure Key Locker</strong>.
         </p>
       </header>
 
-      {/* Large SVG Vault */}
+      {/* Large Interactive SVG Vault */}
       <section className="glass-card rounded-2xl p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-white">Interactive Secret Vault</h2>
-            <p className="text-sm text-slate-400">Click the vault to open it and see what belongs inside.</p>
+            <p className="text-sm text-slate-400">
+              APPLICATION → SECRET MANAGER → SECRET → APPLICATION. Click the vault to reveal the
+              explanation.
+            </p>
           </div>
           <button
             type="button"
@@ -62,7 +64,7 @@ export function Module5Page() {
             className="inline-flex min-h-[42px] items-center gap-2 rounded-xl bg-cyan-500 px-4 py-2 text-sm font-bold text-slate-950 hover:bg-cyan-400"
           >
             {vaultOpened ? <Lock className="h-4 w-4" aria-hidden="true" /> : <Unlock className="h-4 w-4" aria-hidden="true" />}
-            <span>{vaultOpened ? 'Lock Vault' : 'Open Secret Vault'}</span>
+            <span>{vaultOpened ? 'Lock Vault' : 'Click Vault to Open'}</span>
           </button>
         </div>
 
@@ -73,9 +75,9 @@ export function Module5Page() {
               <rect x="90" y="32" width="180" height="126" rx="14" fill={vaultOpened ? 'rgba(16,185,129,0.12)' : '#1e293b'} stroke={vaultOpened ? '#34d399' : '#475569'} strokeWidth="2" />
               {vaultOpened ? (
                 <g>
-                  <text x="180" y="72" textAnchor="middle" fill="#a7f3d0" fontSize="11.5" fontWeight="700">🔑 Passwords & API Keys</text>
-                  <text x="180" y="96" textAnchor="middle" fill="#a7f3d0" fontSize="11.5" fontWeight="700">🎟️ Access Tokens</text>
-                  <text x="180" y="120" textAnchor="middle" fill="#a7f3d0" fontSize="11.5" fontWeight="700">🗄️ DB Credentials</text>
+                  <text x="180" y="76" textAnchor="middle" fill="#a7f3d0" fontSize="11.5" fontWeight="700">🔑 Passwords & API Keys</text>
+                  <text x="180" y="100" textAnchor="middle" fill="#a7f3d0" fontSize="11.5" fontWeight="700">🎟️ Access Tokens</text>
+                  <text x="180" y="124" textAnchor="middle" fill="#a7f3d0" fontSize="11.5" fontWeight="700">🗄️ DB Credentials</text>
                 </g>
               ) : (
                 <g className="animate-gentle-pulse">
@@ -85,33 +87,37 @@ export function Module5Page() {
               )}
             </svg>
           </div>
-
-          <div className="space-y-2.5 text-xs sm:text-sm md:col-span-6">
-            <p className="flex items-center gap-2 text-rose-200"><XCircle className="h-4 w-4 shrink-0 text-rose-400" aria-hidden="true" /> Never upload secrets to GitHub.</p>
-            <p className="flex items-center gap-2 text-rose-200"><XCircle className="h-4 w-4 shrink-0 text-rose-400" aria-hidden="true" /> Never put passwords in frontend code.</p>
-            <p className="flex items-center gap-2 text-emerald-200"><RefreshCw className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" /> Rotate compromised secrets immediately.</p>
+          <div aria-live="polite" className="space-y-3 text-sm md:col-span-6">
+            <div className="rounded-xl border border-emerald-400/35 bg-emerald-950/30 p-3.5 font-mono text-xs text-emerald-200">
+              APPLICATION ➔ SECRET MANAGER ➔ SECRET ➔ APPLICATION
+            </div>
+            <p className="text-slate-200">
+              {vaultOpened
+                ? 'Secrets stay encrypted inside the Secret Manager and are never placed in public code or GitHub.'
+                : 'Click the vault button to see how secrets are stored safely.'}
+            </p>
           </div>
         </div>
       </section>
 
-      {/* BAD vs GOOD SVG */}
+      {/* Bad vs Good Secret Storage Animated Flows */}
       <section className="grid gap-4 md:grid-cols-2">
         <div className="glass-card rounded-2xl border border-rose-500/35 p-5">
           <h2 className="mb-2 flex items-center gap-2 text-base font-bold text-rose-300">
             <ShieldAlert className="h-5 w-5" aria-hidden="true" />
-            BAD: Exposed on GitHub
+            BAD: Exposed in Public Repository
           </h2>
           <p className="rounded-xl bg-slate-950 p-3 font-mono text-xs text-rose-200">
-            CODE ➔ API KEY ➔ GITHUB ➔ PUBLIC EXPOSURE 🚨
+            Source Code ➔ API KEY ➔ Public Repository ➔ Secret Exposed 🚨
           </p>
         </div>
         <div className="glass-card rounded-2xl border border-emerald-500/35 p-5">
           <h2 className="mb-2 flex items-center gap-2 text-base font-bold text-emerald-300">
             <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
-            GOOD: Secret Manager
+            GOOD: Stored in Secret Manager
           </h2>
           <p className="rounded-xl bg-slate-950 p-3 font-mono text-xs text-emerald-200">
-            APPLICATION ➔ SECRET MANAGER ➔ SECRET ➔ APPLICATION 🛡️
+            Application ➔ Secret Manager ➔ Secure Secret ➔ Application 🛡️
           </p>
         </div>
       </section>
@@ -122,7 +128,7 @@ export function Module5Page() {
           <Code2 className="h-5 w-5 text-cyan-300" aria-hidden="true" />
           <div>
             <h2 className="text-lg font-bold text-white">Secret Detection Activity</h2>
-            <p className="text-sm text-slate-400">Which line should NOT be stored directly in code?</p>
+            <p className="text-sm text-slate-400">Which line contains sensitive information?</p>
           </div>
         </div>
 
@@ -159,11 +165,12 @@ export function Module5Page() {
               {pickedLine.isSecret ? (
                 <p>
                   <strong>🎯 Correct! Line 3 (<code>API_KEY = "DEMO-SECRET-123"</code>)</strong>{' '}
-                  should NEVER be in code. Anyone reading GitHub can steal it. Store it in a Secret
-                  Manager instead! (+20 pts)
+                  contains sensitive information. Storing it in code exposes it to anyone who sees
+                  the repo. Use <strong>Application → Secret Manager → Secure Secret</strong>{' '}
+                  instead! (+20 pts)
                 </p>
               ) : (
-                <p>Line {pickedLine.num} is normal configuration—keep looking for the secret!</p>
+                <p>Line {pickedLine.num} is non-sensitive configuration—keep looking!</p>
               )}
             </div>
           )}
@@ -171,24 +178,19 @@ export function Module5Page() {
       </section>
 
       <ConceptCard
-        title="Secret Management"
-        whatIsIt="Keeping passwords, API keys, and tokens locked inside a Secret Manager instead of source code."
-        whyItMatters="Bots scan public code repositories in seconds looking for leaked keys."
-        simpleExample="Application asks Secret Manager for API_KEY at runtime."
-        analogy="Locking your house key inside a secure key locker instead of taping it to the door."
-      />
-
-      <DiscussionPrompt
-        question="What happens if a secret is exposed?"
-        expectedAnswer="Anyone who finds the key can pretend to be your app or account. You must remove it AND rotate (replace) it immediately."
+        title="Why Secrets Must Be Protected"
+        whatIsIt="Keeping passwords, API keys, access tokens, and DB credentials inside a Secret Manager."
+        whyItMatters="Exposed keys let strangers pretend to be your application."
+        simpleExample='Never hardcode API_KEY = "DEMO-SECRET-123" in source code.'
+        analogy="Password = House key • Secret Manager = Secure key locker."
       />
 
       <QuickCheck
         id="m5-q1"
-        question="Where should an application store its API key?"
-        options={['Inside a Secret Manager', 'Inside public frontend JavaScript', 'In a GitHub README', 'In a class chat']}
+        question="Why should API keys be protected in a Secret Manager?"
+        options={['Because anyone who finds a key in code can access protected services', 'Because Secret Managers make code colorful']}
         correctIndex={0}
-        explanation="Secret Managers keep keys encrypted and out of your source code."
+        explanation="Secrets prove identity—never leave them in public code."
       />
     </div>
   );

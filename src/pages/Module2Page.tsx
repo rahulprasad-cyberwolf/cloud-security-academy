@@ -1,105 +1,78 @@
-import { AlertTriangle, CheckCircle2, Clock, FileSearch, MapPin, ShieldCheck, User } from 'lucide-react';
+import { AlertTriangle, Shield, UserCheck, UserX } from 'lucide-react';
 import { useState } from 'react';
 import { ConceptCard } from '../components/ConceptCard';
 import { QuickCheck } from '../components/QuickCheck';
 import { useCourse } from '../context/CourseContext';
 
-interface AuditLogEntry {
+interface AccessRow {
   id: string;
   user: string;
-  action: string;
-  time: string;
-  location: string;
-  result: 'SUCCESS' | 'FAILED';
-  suspicious: boolean;
-  reason: string;
+  role: string;
+  permission: string;
+  status: 'Required' | 'Review';
+  unnecessary: boolean;
+  resource: string;
+  explanation: string;
 }
 
-const SIMULATED_LOGS: AuditLogEntry[] = [
+const ACCESS_ROWS: AccessRow[] = [
   {
-    id: 'log-1',
-    user: 'rahul@example.com',
-    action: 'Login',
-    time: '10:42 AM',
-    location: 'Chennai',
-    result: 'SUCCESS',
-    suspicious: false,
-    reason: 'Normal daytime login from Rahul’s usual city (Chennai).',
+    id: 'u1',
+    user: 'Rahul',
+    role: 'Developer',
+    permission: 'Read + Write',
+    status: 'Required',
+    unnecessary: false,
+    resource: 'Dev App',
+    explanation: 'Rahul is an active Developer who needs Read + Write on Dev App.',
   },
   {
-    id: 'log-2',
-    user: 'arun@example.com',
-    action: 'View Test Report',
-    time: '11:15 AM',
-    location: 'Bengaluru',
-    result: 'SUCCESS',
-    suspicious: false,
-    reason: 'Routine work by a tester during office hours.',
+    id: 'u2',
+    user: 'Arun',
+    role: 'Tester',
+    permission: 'Read',
+    status: 'Required',
+    unnecessary: false,
+    resource: 'Test Reports',
+    explanation: 'Arun is an active Tester who only needs Read access.',
   },
   {
-    id: 'log-3',
-    user: 'unknown-user',
-    action: 'Failed Login',
-    time: '02:13 AM',
-    location: 'Unknown',
-    result: 'FAILED',
-    suspicious: true,
-    reason: 'Suspicious! Unknown user trying to log in at 2:13 AM from an unknown location.',
+    id: 'u3',
+    user: 'OldUser',
+    role: 'Admin',
+    permission: 'Full Access',
+    status: 'Review',
+    unnecessary: true,
+    resource: 'All Cloud Resources',
+    explanation: 'Unnecessary Admin access! OldUser should be reviewed and removed.',
   },
   {
-    id: 'log-4',
-    user: 'priya@example.com',
-    action: 'Upload Assignment PDF',
-    time: '02:30 PM',
-    location: 'Hyderabad',
-    result: 'SUCCESS',
-    suspicious: false,
-    reason: 'Normal student/developer file upload during the afternoon.',
-  },
-  {
-    id: 'log-5',
-    user: 'unknown-user',
-    action: 'Download All Student Passwords',
-    time: '02:16 AM',
-    location: 'Unknown',
-    result: 'SUCCESS',
-    suspicious: true,
-    reason: 'Very dangerous! An unknown user succeeded in downloading sensitive data at 2:16 AM.',
-  },
-  {
-    id: 'log-6',
-    user: 'rahul@example.com',
-    action: 'Change Storage to Public',
-    time: '02:18 AM',
-    location: 'Unknown',
-    result: 'SUCCESS',
-    suspicious: true,
-    reason: 'Suspicious! Rahul normally logs in from Chennai at 10 AM—this is 2:18 AM from an unknown place changing security settings.',
+    id: 'u4',
+    user: 'GuestUser',
+    role: 'Admin',
+    permission: 'Full Access',
+    status: 'Review',
+    unnecessary: true,
+    resource: 'All Cloud Resources',
+    explanation: 'Dangerous! A GuestUser should NEVER have Admin Full Access.',
   },
 ];
 
 export function Module2Page() {
   const { progress, recordChallengeSuccess } = useCourse();
-  const [clickedIds, setClickedIds] = useState<string[]>([]);
-  const [lastFeedback, setLastFeedback] = useState<AuditLogEntry | null>(null);
+  const [flagged, setFlagged] = useState<Record<string, boolean>>({});
+  const [feedback, setFeedback] = useState<AccessRow | null>(null);
+  const isTeacher = progress.mode === 'teacher';
 
-  const suspiciousLogs = SIMULATED_LOGS.filter((l) => l.suspicious);
-  const foundSuspiciousCount = clickedIds.filter((id) =>
-    suspiciousLogs.some((s) => s.id === id)
-  ).length;
+  const targets = ACCESS_ROWS.filter((r) => r.unnecessary);
+  const foundCount = targets.filter((t) => flagged[t.id]).length;
 
-  const handleLogClick = (entry: AuditLogEntry) => {
-    setLastFeedback(entry);
-    if (!clickedIds.includes(entry.id)) {
-      const nextClicked = [...clickedIds, entry.id];
-      setClickedIds(nextClicked);
-
-      const nextFound = nextClicked.filter((id) =>
-        suspiciousLogs.some((s) => s.id === id)
-      ).length;
-      if (nextFound === suspiciousLogs.length) {
-        recordChallengeSuccess('m2-audit-game', 20);
-      }
+  const handleToggleFlag = (row: AccessRow) => {
+    setFeedback(row);
+    const next = { ...flagged, [row.id]: !flagged[row.id] };
+    setFlagged(next);
+    if (next['u3'] && next['u4'] && !next['u1'] && !next['u2']) {
+      recordChallengeSuccess('m2-access-review', 20, 'lab-access-review');
     }
   };
 
@@ -107,167 +80,136 @@ export function Module2Page() {
     <div className="space-y-6">
       <header className="glass-card rounded-2xl p-6">
         <h1 id="main-content" tabIndex={-1} className="text-2xl font-bold text-white sm:text-3xl">
-          Module 2: Audit Logs
+          Access Review
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-300 sm:text-base">
-          An <strong className="text-cyan-300">Audit Log</strong> is a special security log that
-          answers 5 simple questions about every important action in your cloud account.
+          An <strong className="text-cyan-300">Access Review</strong> checks who has access to
+          cloud resources—especially spotting who should NOT have Admin access.
         </p>
-
-        {/* 5 Questions Strip with Custom SVG */}
-        <div className="mt-5 grid gap-3 sm:grid-cols-5">
-          {[
-            { icon: User, q: 'WHO?', a: 'Which user or account' },
-            { icon: FileSearch, q: 'WHAT?', a: 'What action happened' },
-            { icon: Clock, q: 'WHEN?', a: 'Exact date and time' },
-            { icon: MapPin, q: 'WHERE?', a: 'City or IP location' },
-            { icon: ShieldCheck, q: 'RESULT?', a: 'Success or Failed' },
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={item.q}
-                className="rounded-xl border border-slate-700/70 bg-slate-900/70 p-3.5 text-center"
-              >
-                <Icon className="mx-auto mb-1.5 h-5 w-5 text-cyan-300" aria-hidden="true" />
-                <p className="text-xs font-bold tracking-wider text-white">{item.q}</p>
-                <p className="mt-0.5 text-xs text-slate-400">{item.a}</p>
-              </div>
-            );
-          })}
-        </div>
       </header>
 
-      <ConceptCard
-        title="What is an Audit Log?"
-        whatIsIt="An audit log is a chronological record of important actions happening inside a cloud system—who did what, when, from where, and whether it worked."
-        whyItMatters="If something goes wrong or data disappears, audit logs let you trace the exact timeline instead of guessing."
-        simpleExample="USER: rahul@example.com | ACTION: Login | TIME: 10:42 AM | LOCATION: Chennai | RESULT: SUCCESS"
-        analogy="It is like a CCTV recording + visitor sign-in book for your cloud environment."
-        teacherNote="Compare the two logs from the prompt: Rahul at 10:42 AM in Chennai vs unknown-user at 02:13 AM in Unknown."
-        discussionQuestion="If an audit log shows 'RESULT: FAILED', why is it still important to keep it?"
-      />
-
-      {/* Interactive Fake Cloud Audit-Log Dashboard + Mini-Game */}
+      {/* SVG showing users connected to different cloud resources */}
       <section className="glass-card rounded-2xl p-6">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="mb-3 text-lg font-bold text-white">
+          Users Connected to Cloud Resources
+        </h2>
+        <div className="rounded-2xl border border-slate-800 bg-slate-950/85 p-4">
+          <svg
+            role="img"
+            aria-label="Diagram showing Rahul connected to Dev App, Arun connected to Test Reports, and OldUser and GuestUser connected to All Cloud Resources"
+            viewBox="0 0 720 180"
+            className="h-auto w-full"
+          >
+            {ACCESS_ROWS.map((r, idx) => {
+              const y = 16 + idx * 40;
+              const stroke = r.unnecessary ? '#fb7185' : '#34d399';
+              return (
+                <g key={r.id}>
+                  <rect x="20" y={y} width="160" height="30" rx="8" fill="#0f172a" stroke={stroke} strokeWidth="1.8" />
+                  <text x="100" y={y + 19} textAnchor="middle" fill="#fff" fontSize="11" fontWeight="700">
+                    {r.user} ({r.role})
+                  </text>
+                  <line x1="180" y1={y + 15} x2="460" y2={y + 15} stroke={stroke} strokeWidth="2" className="animate-flow" />
+                  <rect x="460" y={y} width="230" height="30" rx="8" fill="#0f172a" stroke={stroke} strokeWidth="1.8" />
+                  <text x="575" y={y + 19} textAnchor="middle" fill={r.unnecessary ? '#fda4af' : '#6ee7b7'} fontSize="11" fontWeight="700">
+                    {r.resource} ({r.permission})
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
+        </div>
+      </section>
+
+      {/* Fictional Access-Control Dashboard */}
+      <section className="glass-card rounded-2xl p-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="text-lg font-bold text-white">
-              Mini-Game: Find the Suspicious Activity
+              Access Review Activity: Identify Who Needs Review
             </h2>
-            <p className="text-sm text-slate-300">
-              Click the <strong>3 suspicious log entries</strong> in this simulated cloud audit-log
-              dashboard.
+            <p className="text-sm text-slate-400">
+              Click <strong>“Flag for Review”</strong> on the 2 accounts that should NOT have Admin
+              access.
             </p>
           </div>
-          <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3.5 py-2 text-xs font-semibold text-cyan-200">
-            Found: {foundSuspiciousCount} / {suspiciousLogs.length} suspicious logs
-          </div>
+          <span className="rounded-xl border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-200">
+            Found: {foundCount} / {targets.length}
+          </span>
         </div>
 
-        <div className="space-y-2.5">
-          {SIMULATED_LOGS.map((entry) => {
-            const wasClicked = clickedIds.includes(entry.id);
-            const showTeacherHighlight = progress.mode === 'teacher' && entry.suspicious;
-
-            let rowStyle =
-              'border-slate-700/70 bg-slate-900/70 hover:border-cyan-400/50 hover:bg-slate-800/80';
-            if (wasClicked) {
-              rowStyle = entry.suspicious
-                ? 'border-rose-400/70 bg-rose-950/35'
-                : 'border-emerald-400/50 bg-emerald-950/25';
-            } else if (showTeacherHighlight) {
-              rowStyle = 'border-violet-400/70 bg-violet-950/30';
-            }
-
-            return (
-              <button
-                key={entry.id}
-                type="button"
-                onClick={() => handleLogClick(entry)}
-                className={`w-full rounded-xl border p-4 text-left transition-colors ${rowStyle}`}
-              >
-                <div className="grid items-center gap-2 text-xs sm:grid-cols-5 sm:text-sm">
-                  <div>
-                    <span className="block text-[10px] tracking-wider text-slate-400 uppercase">
-                      USER
-                    </span>
-                    <span className="font-mono font-semibold text-white">{entry.user}</span>
-                  </div>
-                  <div>
-                    <span className="block text-[10px] tracking-wider text-slate-400 uppercase">
-                      ACTION
-                    </span>
-                    <span className="text-slate-200">{entry.action}</span>
-                  </div>
-                  <div>
-                    <span className="block text-[10px] tracking-wider text-slate-400 uppercase">
-                      TIME
-                    </span>
-                    <span className="font-mono text-slate-200">{entry.time}</span>
-                  </div>
-                  <div>
-                    <span className="block text-[10px] tracking-wider text-slate-400 uppercase">
-                      LOCATION
-                    </span>
-                    <span className="text-slate-200">{entry.location}</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 sm:justify-end">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                        entry.result === 'SUCCESS'
-                          ? 'bg-emerald-500/20 text-emerald-300'
-                          : 'bg-rose-500/20 text-rose-300'
-                      }`}
-                    >
-                      {entry.result}
-                    </span>
-                    {wasClicked &&
-                      (entry.suspicious ? (
-                        <AlertTriangle className="h-4 w-4 text-rose-400" aria-hidden="true" />
-                      ) : (
-                        <CheckCircle2 className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-                      ))}
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+        <div tabIndex={0} role="region" aria-labelledby="access-review-caption" className="table-wrapper rounded-xl border border-slate-800 bg-slate-950/70">
+          <table className="responsive-access-table text-left text-sm">
+            <caption id="access-review-caption" className="visually-hidden">Access review dashboard</caption>
+            <thead className="bg-slate-900/95 text-xs tracking-wider text-slate-400 uppercase">
+              <tr>
+                <th scope="col" className="px-4 py-3">User</th>
+                <th scope="col" className="px-4 py-3">Role</th>
+                <th scope="col" className="px-4 py-3">Permission</th>
+                <th scope="col" className="px-4 py-3">Status</th>
+                <th scope="col" className="px-4 py-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-800/80">
+              {ACCESS_ROWS.map((row) => {
+                const isFlagged = Boolean(flagged[row.id]);
+                const teacherHighlight = isTeacher && row.unnecessary;
+                return (
+                  <tr key={row.id} className={isFlagged || teacherHighlight ? 'bg-rose-950/25' : 'hover:bg-slate-900/50'}>
+                    <th scope="row" className="px-4 py-3.5 font-semibold text-white">{row.user}</th>
+                    <td data-label="Role" className="px-4 py-3.5 text-slate-300">{row.role}</td>
+                    <td data-label="Permission" className="px-4 py-3.5 font-mono text-xs text-cyan-200">{row.permission}</td>
+                    <td data-label="Status" className="px-4 py-3.5">
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ${!row.unnecessary ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
+                        {!row.unnecessary ? <UserCheck className="h-3.5 w-3.5" aria-hidden="true" /> : <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />}
+                        {row.status}
+                      </span>
+                    </td>
+                    <td data-label="Action" className="px-4 py-3.5 text-right">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleFlag(row)}
+                        aria-pressed={isFlagged}
+                        className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold ${
+                          isFlagged ? 'border-rose-400 bg-rose-500/20 text-rose-100' : 'border-slate-700 bg-slate-900 text-slate-200'
+                        }`}
+                      >
+                        <UserX className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>{isFlagged ? 'Flagged' : 'Flag for Review'}</span>
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
 
-        <div aria-live="polite" className="mt-4">
-          {lastFeedback && (
-            <div
-              className={`rounded-xl border p-4 text-sm ${
-                lastFeedback.suspicious
-                  ? 'border-rose-400/50 bg-rose-950/35 text-rose-100'
-                  : 'border-emerald-400/40 bg-emerald-950/30 text-emerald-100'
-              }`}
-            >
-              <p className="font-bold">
-                {lastFeedback.suspicious ? '🚨 Suspicious Activity Found!' : '✅ Normal Activity'}
-              </p>
-              <p className="mt-1">{lastFeedback.reason}</p>
-            </div>
-          )}
-
-          {foundSuspiciousCount === suspiciousLogs.length && (
-            <p className="mt-3 rounded-xl border border-emerald-400/40 bg-emerald-500/15 px-4 py-2.5 text-sm font-semibold text-emerald-200">
-              🎉 Great detective work! You spotted all 3 suspicious audit log entries (+20 pts).
+        <div aria-live="polite" className="mt-3">
+          {feedback && (
+            <p className={`rounded-xl border p-3 text-sm ${feedback.unnecessary ? 'border-emerald-400/40 bg-emerald-950/30 text-emerald-200' : 'border-amber-400/40 bg-amber-950/25 text-amber-200'}`}>
+              <Shield className="mr-1.5 inline h-4 w-4" aria-hidden="true" />
+              {feedback.explanation}
             </p>
           )}
         </div>
       </section>
 
+      <ConceptCard
+        title="Why Regular Access Reviews Matter"
+        whatIsIt="Checking user roles and permissions periodically to remove unnecessary or old Admin access."
+        whyItMatters="Unused old accounts and guest Admin accounts are easy targets for attackers."
+        simpleExample="Flagging OldUser and GuestUser while keeping Rahul (Developer) and Arun (Tester)."
+        analogy="Checking the building guest list and taking back keys from people who no longer work there."
+        expectedAnswer="OldUser and GuestUser should be reviewed and removed from Admin."
+      />
+
       <QuickCheck
-        id="m2-check"
-        question="Which of these audit log entries looks MOST suspicious?"
-        options={[
-          'USER: unknown-user | ACTION: Failed Login | TIME: 02:13 AM | LOCATION: Unknown',
-          'USER: rahul@example.com | ACTION: Login | TIME: 10:42 AM | LOCATION: Chennai',
-        ]}
+        id="m2-q1"
+        question="Which accounts in our Access Review table should NOT have Admin Full Access?"
+        options={['OldUser and GuestUser', 'Rahul and Arun']}
         correctIndex={0}
-        explanation="An unknown user failing to log in at 2:13 AM from an unknown location is a classic warning sign."
+        explanation="OldUser and GuestUser have Full Admin Access that is not required."
       />
     </div>
   );

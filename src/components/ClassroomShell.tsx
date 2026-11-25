@@ -14,7 +14,6 @@ import {
   Pause,
   Play,
   RotateCcw,
-  Search,
   ShieldCheck,
   Sparkles,
   Trophy,
@@ -67,7 +66,6 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
         Skip to main content
       </a>
 
-      {/* Top Classroom Bar */}
       <header className="no-print sticky top-0 z-40 border-b border-slate-800/80 bg-[#060b14]/95 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
           <div className="flex items-center gap-3">
@@ -94,7 +92,7 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
             >
               <svg
                 role="img"
-                aria-label="CloudSec Classroom"
+                aria-label="Cloud Security Interactive Learning Lab"
                 viewBox="0 0 40 40"
                 className="h-9 w-9 shrink-0"
               >
@@ -111,25 +109,25 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
                   strokeWidth="2.2"
                 />
                 <path
-                  d="M14 21a4 4 0 0 1 3.8-4 5 5 0 0 1 9.4 1.4A3.2 3.2 0 0 1 26.5 24H15a3 3 0 0 1-1-3z"
+                  d="M15 20l3.5 3.5L26 16"
                   fill="none"
-                  stroke="#e2e8f0"
-                  strokeWidth="1.8"
+                  stroke="#34d399"
+                  strokeWidth="2.5"
                   strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </svg>
               <div>
                 <span className="block text-sm font-bold tracking-tight text-white sm:text-base">
-                  CloudSec Classroom
+                  Cloud Security Lab
                 </span>
                 <span className="hidden text-xs text-slate-400 sm:block">
-                  2-Hour Interactive Beginner Cloud Security Lab
+                  Interactive Beginner Classroom
                 </span>
               </div>
             </button>
           </div>
 
-          {/* Right Classroom Controls */}
           <div className="flex flex-wrap items-center gap-2">
             {!progress.projectorMode && (
               <div className="hidden items-center gap-3 rounded-xl border border-slate-800 bg-slate-900/70 px-3 py-1.5 md:flex">
@@ -150,7 +148,6 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
               </div>
             )}
 
-            {/* Student / Teacher Mode Switch */}
             <div
               role="group"
               aria-label="Classroom display mode"
@@ -184,7 +181,6 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
               </button>
             </div>
 
-            {/* Projector Mode Toggle */}
             <button
               type="button"
               onClick={toggleProjectorMode}
@@ -227,7 +223,6 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
           progress.projectorMode ? 'max-w-5xl pb-24' : 'max-w-7xl'
         }`}
       >
-        {/* Sidebar Navigation (hidden in Projector Mode for clean full-screen teaching) */}
         {!progress.projectorMode && (
           <aside
             className={`no-print lg:w-72 lg:shrink-0 ${
@@ -237,7 +232,7 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
             <nav aria-label="Course modules" className="glass-card sticky top-20 rounded-2xl p-3.5">
               <div className="mb-3 flex items-center justify-between px-2">
                 <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
-                  2-Hour Classroom
+                  Learning Flow
                 </span>
                 <span className="text-xs font-medium text-cyan-300">
                   {progress.completedModules.length}/{MODULES.length}
@@ -257,7 +252,7 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
                     }`}
                   >
                     <Home className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span>Home & 2-Hr Roadmap</span>
+                    <span>Home & Roadmap</span>
                   </button>
                 </li>
                 <li>
@@ -272,13 +267,13 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
                     }`}
                   >
                     <LayoutGrid className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span>Course Overview</span>
+                    <span>Topic Overview</span>
                   </button>
                 </li>
 
                 <li className="my-2 border-t border-slate-800 pt-2">
                   <span className="px-3 text-[11px] font-semibold tracking-wider text-slate-500 uppercase">
-                    Teaching Modules
+                    Cloud Security Topics
                   </span>
                 </li>
 
@@ -325,20 +320,6 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
                 <li className="mt-2 space-y-1 border-t border-slate-800 pt-2">
                   <button
                     type="button"
-                    onClick={() => handleNav('detective-challenge')}
-                    aria-current={progress.currentPage === 'detective-challenge' ? 'page' : undefined}
-                    className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-semibold transition-colors ${
-                      progress.currentPage === 'detective-challenge'
-                        ? 'bg-violet-500/20 text-violet-200'
-                        : 'text-violet-300 hover:bg-violet-500/10'
-                    }`}
-                  >
-                    <Search className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span>10m Detective Challenge</span>
-                  </button>
-
-                  <button
-                    type="button"
                     onClick={() => handleNav('final-challenge')}
                     aria-current={progress.currentPage === 'final-challenge' ? 'page' : undefined}
                     className={`flex w-full items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold transition-colors ${
@@ -349,7 +330,7 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
                   >
                     <span className="flex items-center gap-2.5">
                       <ShieldCheck className="h-4 w-4 shrink-0" aria-hidden="true" />
-                      <span>Secure the Cloud Lab</span>
+                      <span>Secure the Cloud</span>
                     </span>
                     {progress.finalSecurityScore === 100 && (
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" />
@@ -367,7 +348,7 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
                     }`}
                   >
                     <Sparkles className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    <span>Visual Final Recap</span>
+                    <span>Quick Recap</span>
                   </button>
 
                   <button
@@ -396,7 +377,7 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
                   >
                     <span className="flex items-center gap-2.5">
                       <Award className="h-4 w-4 shrink-0" aria-hidden="true" />
-                      <span>Final Quiz & Certificate</span>
+                      <span>Knowledge Quiz</span>
                     </span>
                     {progress.finalQuizSubmitted && (
                       <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" aria-hidden="true" />
@@ -419,14 +400,13 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
           </aside>
         )}
 
-        {/* Main Content Area */}
         <main className="min-w-0 flex-1 space-y-6">
           {progress.mode === 'teacher' && (
             <div className="no-print flex items-center gap-2.5 rounded-xl border border-violet-400/35 bg-violet-950/35 px-4 py-2.5 text-xs text-violet-200 sm:text-sm">
               <BookOpen className="h-4 w-4 shrink-0 text-violet-300" aria-hidden="true" />
               <span>
-                <strong>Teacher Mode Active:</strong> Teaching Objectives, Key Points, Expected
-                Answers, and Discussion Prompts are visible.
+                <strong>Teacher Mode Active:</strong> Teaching notes, key points, expected answers,
+                and common student confusions are visible.
               </span>
             </div>
           )}
@@ -434,9 +414,9 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
           {currentModule && (
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
               <span>
-                {currentModule.topicTag} • {currentModule.title}
+                Step {currentModule.number} • {currentModule.topicTag}
               </span>
-              <span>Duration: {currentModule.duration}</span>
+              <span>{currentModule.title}</span>
             </div>
           )}
 
@@ -467,7 +447,7 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
                 className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition-opacity hover:opacity-95"
               >
                 <span>
-                  {progress.currentPage === 'home' ? 'Start 2-Hour Class' : 'Complete & Next'}
+                  {progress.currentPage === 'home' ? 'Start Cloud Security' : 'Complete & Next'}
                 </span>
                 <ChevronRight className="h-4 w-4" aria-hidden="true" />
               </button>
@@ -477,19 +457,18 @@ export function ClassroomShell({ children }: { children: React.ReactNode }) {
                 onClick={() => handleNav('overview')}
                 className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-emerald-400/50 bg-emerald-500/15 px-4 py-2.5 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/25"
               >
-                <span>Review Curriculum</span>
+                <span>Review Topics</span>
               </button>
             )}
           </nav>
 
           <footer className="no-print border-t border-slate-800/60 pt-4 text-center text-xs text-slate-500">
-            CloudSec Classroom — 100% simulated defensive cloud security training environment. Works
-            offline; no real cloud accounts or live networks are contacted.
+            Cloud Security Interactive Learning Lab — 100% simulated educational environment. No real
+            cloud accounts or live networks are contacted.
           </footer>
         </main>
       </div>
 
-      {/* Projector Mode Floating Quick-Control Bar */}
       {progress.projectorMode && (
         <div
           role="region"

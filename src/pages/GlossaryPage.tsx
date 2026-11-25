@@ -2,6 +2,24 @@ import { BookMarked, Search } from 'lucide-react';
 import { useState } from 'react';
 import { GLOSSARY_TERMS } from '../data/glossary';
 
+function GlossaryMiniSvg({ category }: { category: 'Access' | 'Visibility' | 'Protection' | 'Response' }) {
+  const color =
+    category === 'Access'
+      ? '#38bdf8'
+      : category === 'Visibility'
+        ? '#fbbf24'
+        : category === 'Protection'
+          ? '#34d399'
+          : '#fb7185';
+  return (
+    <svg role="img" aria-label={`${category} icon`} viewBox="0 0 40 40" className="h-9 w-9 shrink-0">
+      <rect x="4" y="4" width="32" height="32" rx="8" fill="#0f172a" stroke={color} strokeWidth="2" />
+      <circle cx="20" cy="20" r="6" fill={color} opacity="0.35" />
+      <circle cx="20" cy="20" r="3" fill={color} />
+    </svg>
+  );
+}
+
 export function GlossaryPage() {
   const [query, setQuery] = useState('');
   const [selectedTerm, setSelectedTerm] = useState(GLOSSARY_TERMS[0]);
@@ -9,7 +27,7 @@ export function GlossaryPage() {
   const filtered = GLOSSARY_TERMS.filter(
     (t) =>
       t.term.toLowerCase().includes(query.toLowerCase()) ||
-      t.definition.toLowerCase().includes(query.toLowerCase())
+      t.meaning.toLowerCase().includes(query.toLowerCase())
   );
 
   return (
@@ -20,10 +38,10 @@ export function GlossaryPage() {
           <span className="text-xs font-bold tracking-wider uppercase">Beginner Reference</span>
         </div>
         <h1 id="main-content" tabIndex={-1} className="text-2xl font-bold text-white sm:text-3xl">
-          Cloud Security Beginner Glossary
+          Beginner Cloud Security Glossary
         </h1>
         <p className="mt-2 text-sm text-slate-300">
-          Click any term below for a plain-English, one-line explanation and real-world analogy.
+          Click any term below to see its simple meaning, simple example, and visual badge.
         </p>
 
         <div className="relative mt-4 max-w-md">
@@ -36,22 +54,26 @@ export function GlossaryPage() {
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search a term (e.g., Audit Log, Secret)..."
+            placeholder="Search a term (e.g., Audit Log, Least Privilege)..."
             className="w-full rounded-xl border border-slate-700 bg-slate-950 py-2 pr-4 pl-9 text-sm text-white placeholder:text-slate-500"
           />
         </div>
       </header>
 
-      {/* Active Term Spotlight */}
-      <section aria-live="polite" className="glass-card rounded-2xl border border-cyan-400/35 p-5">
-        <span className="rounded-full bg-cyan-500/15 px-2.5 py-0.5 text-xs font-semibold text-cyan-200">
-          {selectedTerm.category}
-        </span>
-        <h2 className="mt-2 text-xl font-bold text-white">{selectedTerm.term}</h2>
-        <p className="mt-1 text-sm text-slate-200">{selectedTerm.definition}</p>
-        <p className="mt-2 text-xs font-medium text-amber-200">
-          <strong>Analogy:</strong> {selectedTerm.analogy}
-        </p>
+      <section aria-live="polite" className="glass-card flex items-start gap-4 rounded-2xl border border-cyan-400/35 p-5">
+        <GlossaryMiniSvg category={selectedTerm.category} />
+        <div>
+          <span className="rounded-full bg-cyan-500/15 px-2.5 py-0.5 text-xs font-semibold text-cyan-200">
+            {selectedTerm.category}
+          </span>
+          <h2 className="mt-1.5 text-xl font-bold text-white">{selectedTerm.term}</h2>
+          <p className="mt-1 text-sm text-slate-200">
+            <strong>Simple meaning:</strong> {selectedTerm.meaning}
+          </p>
+          <p className="mt-1 text-xs font-medium text-emerald-200">
+            <strong>Simple example:</strong> {selectedTerm.example}
+          </p>
+        </div>
       </section>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -63,14 +85,17 @@ export function GlossaryPage() {
               type="button"
               onClick={() => setSelectedTerm(item)}
               aria-pressed={active}
-              className={`rounded-xl border p-4 text-left transition-colors ${
+              className={`flex items-center gap-3 rounded-xl border p-3.5 text-left transition-colors ${
                 active
                   ? 'border-cyan-400 bg-cyan-500/15'
                   : 'border-slate-700/70 bg-slate-900/65 hover:border-cyan-400/40'
               }`}
             >
-              <p className="text-sm font-bold text-white">{item.term}</p>
-              <p className="mt-1 text-xs text-slate-400">{item.analogy}</p>
+              <GlossaryMiniSvg category={item.category} />
+              <div>
+                <p className="text-sm font-bold text-white">{item.term}</p>
+                <p className="text-xs text-slate-400">{item.category}</p>
+              </div>
             </button>
           );
         })}

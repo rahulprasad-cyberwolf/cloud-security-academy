@@ -8,9 +8,10 @@ interface ConceptCardProps {
   whyItMatters: string;
   simpleExample: string;
   analogy: string;
-  teachingObjective?: string;
-  keyPoints?: string[];
+  keyPoint?: string;
+  questionToAsk?: string;
   expectedAnswer?: string;
+  commonConfusion?: string;
   teacherNote?: string;
   discussionQuestion?: string;
 }
@@ -21,9 +22,10 @@ export function ConceptCard({
   whyItMatters,
   simpleExample,
   analogy,
-  teachingObjective,
-  keyPoints,
+  keyPoint,
+  questionToAsk,
   expectedAnswer,
+  commonConfusion,
   teacherNote,
   discussionQuestion,
 }: ConceptCardProps) {
@@ -61,7 +63,7 @@ export function ConceptCard({
       <div className="grid gap-3.5 sm:grid-cols-2">
         <div className="rounded-xl border border-slate-700/60 bg-slate-900/60 p-4">
           <p className="mb-1 text-xs font-semibold tracking-wider text-cyan-300 uppercase">
-            What is it? (Simple Definition)
+            Simple Explanation
           </p>
           <p className="text-sm leading-relaxed text-slate-200">{whatIsIt}</p>
         </div>
@@ -91,34 +93,39 @@ export function ConceptCard({
       </div>
 
       {showTeacherPanel && (
-        <div className="mt-4 space-y-2 rounded-xl border border-violet-400/35 bg-violet-950/35 p-4 text-xs sm:text-sm">
-          <p className="flex items-center gap-1.5 text-xs font-semibold tracking-wider text-violet-300 uppercase">
+        <div className="mt-4 space-y-1.5 rounded-xl border border-violet-400/35 bg-violet-950/35 p-4 text-xs sm:text-sm">
+          <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold tracking-wider text-violet-300 uppercase">
             <GraduationCap className="h-4 w-4" aria-hidden="true" />
-            Teacher Mode — Classroom Guide
+            Teacher Mode — Teaching Notes
           </p>
           <p className="text-violet-100">
-            <strong>Teaching Objective:</strong>{' '}
-            {teachingObjective ?? `Help beginners understand ${title.toLowerCase()} using everyday analogies.`}
+            <strong>Key Point:</strong> {keyPoint ?? teacherNote ?? whatIsIt}
           </p>
-          {keyPoints && keyPoints.length > 0 && (
-            <ul className="list-disc pl-5 text-violet-100">
-              {keyPoints.map((kp) => (
-                <li key={kp}>{kp}</li>
-              ))}
-            </ul>
-          )}
-          {teacherNote && <p className="text-violet-100"><strong>Key Note:</strong> {teacherNote}</p>}
-          {discussionQuestion && (
-            <p className="flex items-start gap-2 text-violet-200">
+          <p className="text-violet-100">
+            <strong>Simple Explanation:</strong> {whatIsIt}
+          </p>
+          <p className="text-violet-100">
+            <strong>Analogy:</strong> {analogy}
+          </p>
+          <p className="text-violet-100">
+            <strong>Example:</strong> {simpleExample}
+          </p>
+          {(questionToAsk || discussionQuestion) && (
+            <p className="flex items-start gap-1.5 text-violet-200">
               <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-violet-300" aria-hidden="true" />
               <span>
-                <strong>Question to Ask Students:</strong> {discussionQuestion}
+                <strong>Question to Ask:</strong> {questionToAsk ?? discussionQuestion}
               </span>
             </p>
           )}
           {expectedAnswer && (
             <p className="text-emerald-200">
               <strong>Expected Answer:</strong> {expectedAnswer}
+            </p>
+          )}
+          {commonConfusion && (
+            <p className="text-amber-200">
+              <strong>Common Student Confusion:</strong> {commonConfusion}
             </p>
           )}
         </div>
